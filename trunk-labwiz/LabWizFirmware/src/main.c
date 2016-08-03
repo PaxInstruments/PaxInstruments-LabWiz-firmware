@@ -37,7 +37,10 @@
 #include "usb_device.h"
 
 /* USER CODE BEGIN Includes */
+
+// Include labwiz tasks here
 #include "labwiz/test_task.h"
+
 /* USER CODE END Includes */
 
 /* Private variables ---------------------------------------------------------*/
