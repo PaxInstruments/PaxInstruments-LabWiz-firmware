@@ -38,7 +38,8 @@
 
 /* USER CODE BEGIN Includes */
 
-// Include labwiz tasks here
+// Include labwiz related headers here
+#include "labwiz/labwiz.h"
 #include "labwiz/test_task.h"
 
 /* USER CODE END Includes */
@@ -130,7 +131,7 @@ int main(void)
   MX_WWDG_Init();
 
   /* USER CODE BEGIN 2 */
-
+  labwiz_init();
   /* USER CODE END 2 */
 
   /* USER CODE BEGIN RTOS_MUTEX */

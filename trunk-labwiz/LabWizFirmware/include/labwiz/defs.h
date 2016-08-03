@@ -8,6 +8,7 @@
 #ifndef __DEFS_H__
 #define __DEFS_H__  // Include guard
 
+#include "stdbool.h"
 #include "stm32f1xx.h"
 
 #define FIRMWARE_VERSION    "0.1"
