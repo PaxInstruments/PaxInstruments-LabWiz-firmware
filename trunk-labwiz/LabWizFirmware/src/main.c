@@ -37,7 +37,7 @@
 #include "usb_device.h"
 
 /* USER CODE BEGIN Includes */
-
+#include "labwiz/test_task.h"
 /* USER CODE END Includes */
 
 /* Private variables ---------------------------------------------------------*/
@@ -148,7 +148,13 @@ int main(void)
   defaultTaskHandle = osThreadCreate(osThread(defaultTask), NULL);
 
   /* USER CODE BEGIN RTOS_THREADS */
-  /* add threads, ... */
+  xTaskCreate( TestTaskFunction,
+            "TestTask",
+            configMINIMAL_STACK_SIZE,
+            NULL,
+            osPriorityNormal,
+            NULL
+    );
   /* USER CODE END RTOS_THREADS */
 
   /* USER CODE BEGIN RTOS_QUEUES */
