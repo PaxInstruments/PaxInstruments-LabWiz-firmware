@@ -41,6 +41,7 @@
 // Include labwiz related headers here
 #include "labwiz/labwiz.h"
 #include "labwiz/test_task.h"
+#include "labwiz/drv_serial.h"
 
 /* USER CODE END Includes */
 
@@ -104,7 +105,7 @@ int main(void)
 {
 
   /* USER CODE BEGIN 1 */
-
+  //__disable_irq();
   /* USER CODE END 1 */
 
   /* MCU Configuration----------------------------------------------------------*/
@@ -132,6 +133,8 @@ int main(void)
 
   /* USER CODE BEGIN 2 */
   labwiz_init();
+
+  //__enable_irq();
   /* USER CODE END 2 */
 
   /* USER CODE BEGIN RTOS_MUTEX */
@@ -159,6 +162,13 @@ int main(void)
             osPriorityNormal,
             NULL
     );
+  xTaskCreate( drv_uart_task,
+              "UARTTask",
+              configMINIMAL_STACK_SIZE,
+              NULL,
+              osPriorityNormal,
+              NULL
+      );
   /* USER CODE END RTOS_THREADS */
 
   /* USER CODE BEGIN RTOS_QUEUES */
@@ -530,7 +540,14 @@ static void MX_GPIO_Init(void)
 }
 
 /* USER CODE BEGIN 4 */
-
+void USART1_IRQHandler(void);
+void USART1_IRQHandler()
+{
+    HAL_NVIC_ClearPendingIRQ(USART1_IRQn);
+    HAL_UART_IRQHandler(&huart1);
+    asm("nop");
+    return;
+}
 /* USER CODE END 4 */
 
 /* StartDefaultTask function */

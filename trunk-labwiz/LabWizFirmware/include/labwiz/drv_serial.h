@@ -3,7 +3,12 @@
 
 void drv_serial_init(void);
 
-void drv_serial_tx(void * buf, int count);
+#define drv_serial1_tx_str(S)   drv_serial1_tx((uint8_t*)(S), sizeof(S)-1);
+void drv_serial1_tx(uint8_t * pData, uint16_t size);
+
+uint8_t drv_serial1_rx(uint8_t* pData, uint8_t max_size);
+
+void drv_uart_task( void *pvParameters );
 
 #endif
 
