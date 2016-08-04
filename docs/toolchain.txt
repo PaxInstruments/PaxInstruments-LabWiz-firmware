@@ -1,0 +1,163 @@
+# These are the instructions for installing the STM32 development tools
+# Mint Linux Linux Mint 17.3 Rosa
+#
+# These instructions are current as of 2016-08-01
+#
+
+# Make a download folder
+mkdir  ~/Downloads/armToolchainDownloads
+cd  ~/Downloads/armToolchainDownloads
+
+# Install Java
+# This may already be done
+# sudo apt-get install default-jre
+
+# Download and install Eclipse
+wget -c http://mirrors.ustc.edu.cn/eclipse/technology/epp/downloads/release/mars/2/eclipse-cpp-mars-2-linux-gtk-x86_64.tar.gz
+sudo tar xvf ~/Downloads/armToolchainDownloads/eclipse-cpp-mars-2-linux-gtk-x86_64.tar.gz -C /usr/local/
+sudo ln -s /usr/local/eclipse/eclipse /usr/local/bin/eclipse
+
+# This first batch of instructions will be a summary of the instructions
+# found at http://gnuarmeclipse.github.io/install/. This page contains
+# several big steps that link to sub pages.
+#
+# The first step is installing the ARM toolchain. You can find these
+# instructions at http://gnuarmeclipse.github.io/toolchain/install/
+#
+# Download the latest files on https://launchpad.net/gcc-arm-embedded/+download
+
+mkdir  ~/Downloads/armToolchainDownloads
+cd  ~/Downloads/armToolchainDownloads
+wget -c https://launchpad.net/gcc-arm-embedded/5.0/5-2016-q2-update/+download/gcc-arm-none-eabi-5_4-2016q2-20160622-linux.tar.bz2
+
+# Make sure you can execute the toolchain
+/usr/local/gcc-arm-none-eabi-5_4-2016q2/bin/arm-none-eabi-gcc --version
+# DO NOT add the toolchain path to the user or system path!
+
+# Install toolchain to /usr/local/
+sudo tar xjf  ~/Downloads/armToolchainDownloads/gcc-arm-none-eabi-5_4-2016q2-20160622-linux.tar.bz2 -C /usr/local
+
+# Install 32-bit libs
+sudo apt-get -y install lib32z1 lib32ncurses5 lib32bz2-1.0
+
+#
+# The next major step is install openocd. You can find the instructons at
+# http://gnuarmeclipse.github.io/openocd/install/
+# Downlaod the latest version from https://github.com/gnuarmeclipse/openocd/releases
+wget -c https://github.com/gnuarmeclipse/openocd/releases/download/gae-0.10.0-20160110/gnuarmeclipse-openocd-debian64-0.10.0-201601101000-dev.tgz
+
+# Copy openocd to  /opt/gnuarmeclipse/openocd/
+sudo mkdir -p /opt/gnuarmeclipse
+sudo tar xvf  ~/Downloads/armToolchainDownloads/gnuarmeclipse-openocd-debian64-0.10.0-201601101000-dev.tgz -C /opt/gnuarmeclipse/
+
+# Check if openocd installed 
+/opt/gnuarmeclipse/openocd/0.10.0-201601101000-dev/bin/openocd --version
+
+# Modify UDEV rules in /etc/udev/rules.d to include USB debug tools.
+sudo cp /opt/gnuarmeclipse/openocd/0.10.0-201601101000-dev/contrib/99-openocd.rules /etc/udev/rules.d/
+sudo udevadm control --reload-rules
+
+# Test openocd can connect to an stm32f4discovery board
+/opt/gnuarmeclipse/openocd/0.10.0-201601101000-dev/bin/openocd -f board/stm32f4discovery.cfg
+
+# After installing a new version update the openocd path.
+# at http://gnuarmeclipse.github.io/openocd/install/ (Update OpenOCD path)
+# 
+
+# Install openocd Eclipse plugin
+# In Eclipse: Help → Install New Software → "http://gnuarmeclipse.sourceforge.net/updates"
+# Install all the plugins
+# TODO: Run this from the command line
+
+# Verify toolchain is listed
+# Eclipse menu, go to (Window →) Preferences → Run/Debug → OpenOCD
+# Click "Restore Defaults"
+
+#
+# The next big step is installing qemu using instructions from
+# http://gnuarmeclipse.github.io/qemu/install/
+
+# Download the most recent version from https://github.com/gnuarmeclipse/qemu/releases
+wget -c https://github.com/gnuarmeclipse/qemu/releases/download/gae-2.6.0-20160728/gnuarmeclipse-qemu-debian64-2.6.0-201607280535.tgz
+
+# Install qemu
+sudo tar xvf ~/Downloads/armToolchainDownloads/gnuarmeclipse-qemu-debian64-2.6.0-201607280535.tgz -C /opt/gnuarmeclipse/
+
+# Verify qemu installation
+/opt/gnuarmeclipse/qemu/2.6.0-201607280535/bin/qemu-system-gnuarmeclipse --version
+
+# Verigy qemu path in Eclipse
+# In Eclipse menu, go to (Window →) Preferences → Run/Debug → QEMU
+# Click "Restore Defaults"
+
+# Set up workspace preferences by following directions at
+# http://gnuarmeclipse.github.io/eclipse/workspace/preferences/
+
+# Save automatically and Text file encoding:
+# go to the Eclipse menu → (Windows →) Preferences → General → Workspace
+# disable the Build automatically option
+# enable Save automatically before build
+# select the default text file encoding to UTF-8
+# check the New text file line delimiter to be set to Unix
+
+# Show line numbers:
+# go to the Eclipse menu → (Window →) Preferences → General → Editors → Text Editors
+# enable Show line numbers
+# enable Show print margin
+# set the Print margin column at 80
+
+# Use active build configuration for indexing:
+# go to the Eclipse menu → (Window →) Preferences → C/C++ → Indexer
+# enable Use active build configuration
+
+# Editor folding:
+# go to the Eclipse menu → (Window →) Preferences → C/C++ → Editor → Folding
+# disable Header Comments (in fact it is recommended to disable all foldings)
+
+# Code formatter:
+# go to the Eclipse menu → (Window →) Preferences → C/C++ → Code Style → Formatter
+# in the Active profile: field, select GNU [built-in]
+# Click Edit
+# Rename to GNU with spaces
+#   Tab policy: Spaces only
+#   Indentation: 2
+#   Spaces: 2
+
+# Build console:
+# go to the Eclipse menu → (Window →) Preferences → C/C++ → Build → Console
+# enable Wrap lines on the console
+# enable Bring console to top when building
+# increase the Limit console output: field, for example from 500 to 5000 lines
+
+# Doxygen:
+# go to the Eclipse menu → (Window →) Preferences → C/C++ → Editor
+# select Doxygen in the Documentation tool comments
+
+# Debug previous application:
+# go to the Eclipse menu → (Window →) Preferences → Run/Debug → Launching
+# select Always launch the previously launched application in the Launch Operation section.
+
+#################
+# Extra plugins #
+#################
+
+# Extra registers plugin:
+# Info at http://mcuoneclipse.com/2014/05/29/how-to-add-register-details-view-in-eclipse/
+# Eclipse: Help -> Install new software -> http://embsysregview.sourceforge.net/update
+
+# FreeRTOS Eclipse plugin:
+# Info at http://mcuoneclipse.com/2013/08/04/diy-free-toolchain-for-kinetis-part-5-freertos-eclipse-kernel-awareness-with-gdb/
+# Eclipse: Help -> Install new software -> http://www.highintegritysystems.com/StateViewer/
+
+# STM32CubeMX Eclipse plugins
+# Download from https://my.st.com/content/my_st_com/en/products/development-tools/software-development-tools/stm32-software-development-tools/stm32-configurators-and-code-generators/stsw-stm32095.license%3d1470064717306.html
+# Eclipse: Help -> Install new software -> jar:file:/home/charles/Downloads/armToolchainDownloads/en.stsw-stm32095.zip!/
+
+#########
+# Notes #
+#########
+# Import STM32CubeMX project
+# Info at https://www.element14.com/community/thread/48115/l/how-to-quickly-import-a-stm32cubemx-project?displayFullThread=true
+
+# Set up the packs manager and install the STM32F4 pack on the Boards tab. See http://gnuarmeclipse.github.io/plugins/packs-manager/
+
