@@ -10,6 +10,7 @@
 
 #include "labwiz/drv_serial.h"
 #include "labwiz/test_task.h"
+#include "labwiz/drv_esp8266.h"
 
 #include "FreeRTOS.h"
 #include "task.h"
@@ -19,6 +20,7 @@
 void labwiz_init()
 {
     drv_uart_init();
+    drv_esp8266_init();
 
     return;
 }
