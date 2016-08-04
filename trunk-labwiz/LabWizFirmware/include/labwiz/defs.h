@@ -22,7 +22,7 @@
 
 // Here is where we should specify which pins are defined
 // See port.h for more information on pin IO
-#define led1(func)          portc_13(func)
+#define led1(func)          porta_8(func)
 
 #define interrupts_enable()     __enable_irq ();
 #define interrupts_disable()    __disable_irq ();
