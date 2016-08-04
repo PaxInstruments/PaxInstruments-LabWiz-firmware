@@ -11,6 +11,8 @@
 #include "labwiz/drv_serial.h"
 #include "labwiz/test_task.h"
 #include "labwiz/drv_esp8266.h"
+#include "labwiz/drv_spi.h"
+#include "labwiz/drv_lcd.h"
 
 #include "FreeRTOS.h"
 #include "task.h"
@@ -21,7 +23,8 @@ void labwiz_init()
 {
     drv_uart_init();
     drv_esp8266_init();
-
+    drv_spi_init();
+    drv_lcd_init();
     return;
 }
 
@@ -41,6 +44,14 @@ void labwiz_task_init()
             osPriorityNormal,
             NULL
     );
+    xTaskCreate( drv_lcd_task,
+            "LCDTask",
+            configMINIMAL_STACK_SIZE,
+            NULL,
+            osPriorityNormal,
+            NULL
+    );
+
     return;
 }
 

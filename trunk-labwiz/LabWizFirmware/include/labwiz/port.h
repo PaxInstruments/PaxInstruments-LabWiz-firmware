@@ -68,6 +68,15 @@
 #define porta_8_toggle()    do{TOGGLE(PORTA,8);}while(0)
 
 // PortB
+
+#define portb_9(func)       portb_9_##func
+#define portb_9_set()       do{SET(PORTB,9);}while(0)
+#define portb_9_clear()     do{CLR(PORTB,9);}while(0)
+#define portb_9_write(V)    do{WRITE(PORTB,9,(V));}while(0)
+#define portb_9_read()      (READ(PORTB,9))
+#define portb_9_read_lat()  (READ_LAT(PORTB,9))
+#define portb_9_toggle()    do{TOGGLE(PORTB,9);}while(0)
+
 #define portb_13(func)      portb_13_##func
 #define portb_13_set()      do{SET(PORTB,13);}while(0)
 #define portb_13_clear()    do{CLR(PORTB,13);}while(0)
