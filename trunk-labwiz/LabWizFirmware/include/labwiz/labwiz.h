@@ -3,6 +3,8 @@
 
 void labwiz_init(void);
 
+void labwiz_task_init(void);
+
 #endif
 
 //eof

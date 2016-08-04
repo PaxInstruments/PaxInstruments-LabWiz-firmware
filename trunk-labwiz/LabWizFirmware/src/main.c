@@ -40,9 +40,6 @@
 
 // Include labwiz related headers here
 #include "labwiz/labwiz.h"
-#include "labwiz/test_task.h"
-#include "labwiz/drv_serial.h"
-
 /* USER CODE END Includes */
 
 /* Private variables ---------------------------------------------------------*/
@@ -133,7 +130,6 @@ int main(void)
 
   /* USER CODE BEGIN 2 */
   labwiz_init();
-
   //__enable_irq();
   /* USER CODE END 2 */
 
@@ -155,20 +151,7 @@ int main(void)
   defaultTaskHandle = osThreadCreate(osThread(defaultTask), NULL);
 
   /* USER CODE BEGIN RTOS_THREADS */
-  xTaskCreate( TestTaskFunction,
-            "TestTask",
-            configMINIMAL_STACK_SIZE,
-            NULL,
-            osPriorityNormal,
-            NULL
-    );
-  xTaskCreate( drv_uart_task,
-              "UARTTask",
-              configMINIMAL_STACK_SIZE,
-              NULL,
-              osPriorityNormal,
-              NULL
-      );
+  labwiz_task_init();
   /* USER CODE END RTOS_THREADS */
 
   /* USER CODE BEGIN RTOS_QUEUES */
@@ -540,14 +523,7 @@ static void MX_GPIO_Init(void)
 }
 
 /* USER CODE BEGIN 4 */
-void USART1_IRQHandler(void);
-void USART1_IRQHandler()
-{
-    HAL_NVIC_ClearPendingIRQ(USART1_IRQn);
-    HAL_UART_IRQHandler(&huart1);
-    asm("nop");
-    return;
-}
+
 /* USER CODE END 4 */
 
 /* StartDefaultTask function */
@@ -600,6 +576,7 @@ void Error_Handler(void)
   /* User can add his own implementation to report the HAL error return state */
   while(1) 
   {
+      asm("nop");
   }
   /* USER CODE END Error_Handler */ 
 }
