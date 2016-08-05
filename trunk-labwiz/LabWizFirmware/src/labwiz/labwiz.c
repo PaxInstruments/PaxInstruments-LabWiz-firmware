@@ -30,6 +30,7 @@ void labwiz_init()
 
 void labwiz_task_init()
 {
+    // What is stack requirements for each task
     xTaskCreate( TestTaskFunction,
               "TestTask",
               configMINIMAL_STACK_SIZE,
@@ -46,7 +47,7 @@ void labwiz_task_init()
     );
     xTaskCreate( drv_lcd_task,
             "LCDTask",
-            configMINIMAL_STACK_SIZE,
+            configMINIMAL_STACK_SIZE*3,
             NULL,
             osPriorityNormal,
             NULL

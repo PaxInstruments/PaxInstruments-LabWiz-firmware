@@ -15,6 +15,8 @@
 #include "labwiz/port.h"
 
 // NOTE: The LCD driver is an ST7567
+// RESET is active low
+// A0 is data vs cmd
 
 #include "FreeRTOS.h"
 #include "semphr.h"
@@ -107,7 +109,7 @@ void drv_lcd_blank(void);
 
 void drv_lcd_init()
 {
-    m_set_cmd();
+    //m_set_cmd();
     return;
 }
 
@@ -121,13 +123,14 @@ void drv_lcd_task( void *pvParameters )
     {
         // DEBUG, run every XXXms (slow for testing)
         vTaskDelay(portTICK_PERIOD_MS*500);
-
+#if 0
         #ifndef LCD_DOUBLE_BUFFER
         //lcd_draw();
         #else
         memcpy(send buffer, draw buffer, size);
         //lcd_draw(send_buffer);
         #endif
+#endif
 
     }
 
