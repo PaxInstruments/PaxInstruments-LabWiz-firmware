@@ -72,15 +72,35 @@ typedef enum{
     LCD_COM_DIRECTION,  //15
     LCD_POWER_CONTROL,
     LCD_REGULATION_RATIO,
-    LCD_POWER_SAVE,
-    LCD_NOP,            // 19
+    LCD_NOP,            // 18
+    LCD_CONTRAST_START,
+    LCD_CONTRAST_VALUE,
     LCD_MAX
 }e_lcd_commands;
 
-uint8_t lcdcmds[LCD_MAX] = {0xA7,0x40,0xB0,0x01,0x00,0x00,
-                            0x00,0x00,0xA0,0xA3,0xA2,
-                            0xA2,0xE0,0xEE,0xE2,0xC0,
-                            0x28,0x20,0x81,0xE3};
+uint8_t lcdcmds[LCD_MAX] = {
+        0xA7, //LCD_POWER
+        0x40, //LCD_SET_START_LINE
+        0xB0, //LCD_SET_PAGE
+        0x10, //LCD_SET_COLUMN_MSB
+        0x00, //LCD_SET_COLUMN_LSB
+        0x00, //LCD_READ_STATUS
+        0x00, //LCD_WRITE_DATA
+        0x00, //LCD_READ_DATA
+        0xA0, //LCD_SEG_DIRECTION
+        0xA6, //LCD_INVERT_DISPLAY
+        0xA4, //LCD_ALL_PIXEL_ON
+        0xA2, //LCD_BIAS_SELECT
+        0xE0, //LCD_READMODIFYWRITE
+        0xEE, //LCD_END
+        0xE2, //LCD_RESET
+        0xC0, //LCD_COM_DIRECTION
+        0x28, //LCD_POWER_CONTROL
+        0x20, //LCD_REGULATION_RATIO
+        0xE3,  //LCD_NOP
+        0x81, //LCD_CONTRAST_START
+        0x00, //LCD_CONTRAST_VALUE
+};
 
 #define OP_DISPLAY_ON       (0x01)
 #define OP_DISPLAY_OFF      (0x00)
@@ -99,7 +119,8 @@ uint8_t lcdcmds[LCD_MAX] = {0xA7,0x40,0xB0,0x01,0x00,0x00,
 #define OP_COM_DIR_REV      (0x01)
 #define OP_COM_DIR_NORM     (0x00)
 #define OP_REG_RATIO(R)     ((R)&0x7)
-
+#define OP_CONTRAST(C)      ( (C)&0x3F)
+#define OP_CONTRAST_PCT(C)  ( (((C)*64)/100))&0x3F)
 #define OP_VB_ON            (0x04)
 #define OP_VR_ON            (0x02)
 #define OP_VF_ON            (0x01)
@@ -130,11 +151,16 @@ void _lcdDEBUG_test_pattern1(void);
 
 void drv_lcd_init()
 {
+    m_cs_disable();
     m_reset_on();
     HAL_Delay(1);  /* delay 1 ms */
     m_bl_enable();
     m_cs_disable();
     m_set_cmd();
+
+    drv_lcd_blank();
+    // Turn on middle pixel
+    _lcd_set_pixel(32,66);
 
     _lcd_setup();
 
@@ -191,7 +217,7 @@ void drv_lcd_blank()
 void _lcd_setup()
 {
     uint8_t commands[15];
-#if 0
+#if 1
     /*
     This is the LCD controller strtup sequence
     From the datasheet:
@@ -202,72 +228,70 @@ void _lcd_setup()
     (18) Set EV
     (16) Power Control
     */
-    m_set_cmd();
+    m_reset_off();
+    HAL_Delay(1);  /* delay 1 ms */
+
+    m_cs_enable();
+
+    // Set 1
     commands[0] = (lcdcmds[LCD_BIAS_SELECT]|OP_BIAS_1_9);
     commands[1] = (lcdcmds[LCD_SEG_DIRECTION]|OP_SEG_NORMAL);
     commands[2] = (lcdcmds[LCD_COM_DIRECTION]|OP_COM_DIR_NORM);
-    commands[3] = (lcdcmds[LCD_REGULATION_RATIO]|OP_REG_RATIO(7));  // NEEDS TEST!!!
-    commands[4] = 0x81; // Magic! Look at datasheet for EV setting
-    commands[5] = 0x00; // Electronic volume??? Look at datasheet for EV setting
-    commands[6] = (lcdcmds[LCD_POWER_CONTROL]|OP_VB_ON|OP_VR_ON|OP_VF_ON);
+    commands[3] = (lcdcmds[LCD_SET_START_LINE]|OP_START_LINE(0));
+    drv_spi3_tx(commands,4);
 
-    // Release from reset
-    m_reset_off();
-
-    // Now send these commands to LCD
-    m_cs_enable();
-    drv_spi3_tx(commands,7);
-    m_cs_disable();
-
-    // Then get the LCD into a known state
-    commands[0] = (lcdcmds[LCD_POWER]|OP_DISPLAY_ON);
-    // Now send these commands to LCD
-    m_cs_enable();
-    drv_spi3_tx(commands,1);
-    m_cs_disable();
-#else
-    m_cs_enable();
-    commands[0] = 0xa3; /* 0x0a3: LCD bias 1/9 (suggested for the pi13264) */
-    commands[1] = 0xa1;            /* 0x0a1: ADC set to reverse (suggested for the pi13264) */
-    commands[2] = 0xc0;            /* common output mode: set scan direction normal operation/SHL Select, 0x0c0 --> SHL = 0, normal, 0x0c8 --> SHL = 1 */
-    commands[3] = 0x40;            /* set display start line */
-
-    commands[4] = 0x28 | 0x04;     /* power control: turn on voltage converter */
-    drv_spi3_tx(commands,5);
+    // Set 2
     HAL_Delay(50);  /* delay 50 ms */
+    commands[0] = (lcdcmds[LCD_POWER_CONTROL]|OP_VB_ON|OP_VR_ON|OP_VF_ON);
+    drv_spi3_tx(commands,1);
+
+    // Set 3
+    HAL_Delay(50);  /* delay 50 ms */
+    commands[0] = (lcdcmds[LCD_REGULATION_RATIO]|OP_REG_RATIO(6));  // 6 based on u8glib
+    commands[1] = (lcdcmds[LCD_INVERT_DISPLAY]|OP_NORMAL);  // NOT inverted
+    commands[2] = (lcdcmds[LCD_CONTRAST_START]);
+    commands[3] = (lcdcmds[LCD_CONTRAST_VALUE]|OP_CONTRAST(0x2F)); // Contrast value
+    //commands[4] = (lcdcmds[LCD_POWER]|OP_DISPLAY_ON);
+    commands[4] = 0xAF; // force on
+    // Now send these commands to LCD
+    drv_spi3_tx(commands,5);
+
+    m_cs_disable();
+
+#else
+    m_reset_off();
+    HAL_Delay(1);  /* delay 1 ms */
+
+    m_cs_enable();
+    commands[0] = 0xa3; /* 0x0a3: LCD bias 1/7 (suggested for the pi13264) */
+    commands[1] = 0xa1; /* 0x0a1: ADC set to reverse (suggested for the pi13264) */
+    commands[2] = 0xc0; /* common output mode: set scan direction normal operation/SHL Select, 0x0c0 --> SHL = 0, normal, 0x0c8 --> SHL = 1 */
+    commands[3] = 0x40; /* set display start line */
 
 
-     commands[0] = 0x28 | 0x06;     /* power control: turn on voltage regulator */
-     drv_spi3_tx(commands,1);
-     HAL_Delay(50);  /* delay 50 ms */
+    //commands[4] = 0x28 | 0x04;     /* power control: turn on voltage converter */
+    drv_spi3_tx(commands,4);
 
-     commands[0] = 0x28 | 0x07;     /* power control: turn on voltage follower */
-     drv_spi3_tx(commands,1);
-     HAL_Delay(50);  /* delay 50 ms */
+    commands[0] = 0x28 | 0x07;     /* power control: turn on voltage follower */
+    drv_spi3_tx(commands,1);
 
-     commands[0] = 0x26;            /* set V0 voltage resistor ratio to 6 */
+    HAL_Delay(50);  /* delay 50 ms */
+    commands[0] = 0x26;            /* set V0 voltage resistor ratio to 6 */
 
-     commands[1] = 0xa6;            /* display normal, bit val 0: LCD pixel off. */
-
-     commands[2] = 0xC0;            /* set contrast */
-     commands[3] = 0x18;            /* contrast value*/
-
-     /*0x0ac,*/        /* indicator */
-     /*0x000,*/        /* disable */
-
-     commands[4] = 0xaf;            /* display on */
-     drv_spi3_tx(commands,5);
-     HAL_Delay(100);  /* delay 100 ms */
-
-     #if 0
-
-     commands[0] = 0xa5;            /* display all points, ST7565 */
-     drv_spi3_tx(commands,1);
-     HAL_Delay(200);  /* delay 200 ms */
-
-     commands[0] = 0xa4;            /* normal display */
-     drv_spi3_tx(commands,1);
+    #if 1
+    commands[1] = 0xa6;            /* display normal (Not invert) */
+    #else
+    commands[1] = 0xa7;            /* display invert */
     #endif
+
+    commands[2] = 0x81;
+    commands[3] = 0x28; // contrast value
+    //commands[4] = 0xF8; // Booster 4x
+    //commands[5] = 0x00;
+    /*0x0ac,*/        /* indicator */
+    /*0x000,*/        /* disable */
+    commands[4] = 0xaf;            /* display on */
+    drv_spi3_tx(commands,5);
 
      m_cs_disable();
 #endif
@@ -292,7 +316,7 @@ void _lcd_draw()
      * (6) Display Data Write
      * (1) Display ON/OFF <-- optional????
      */
-#if 0
+#if 1
     uint8_t page;
     uint8_t commands[5];
 
@@ -310,15 +334,15 @@ void _lcd_draw()
 
         m_set_data();
         // Now send data to LCD
-#if 0
-        //drv_spi3_tx(&(m_lcd_buffer[page][0]), LCD_COLS);
-#else
+        #if 1
+        drv_spi3_tx(&(m_lcd_buffer[page][0]), LCD_COLS);
+        #else
         m_lcd_buffer[page][0] = 0x55;
         m_lcd_buffer[page][1] = 0xAA;
         m_lcd_buffer[page][2] = 0x55;
         m_lcd_buffer[page][3] = 0xAA;
         drv_spi3_tx(&(m_lcd_buffer[page][0]), 4);
-#endif
+        #endif
         m_cs_disable();
 
     }
@@ -327,23 +351,32 @@ void _lcd_draw()
     uint8_t x;
     // Now send these commands to LCD
     m_set_cmd();
+    #if 1
     commands[0] = (uint8_t)(lcdcmds[LCD_SET_START_LINE]|OP_START_LINE(0));
-    commands[1] = (uint8_t)(lcdcmds[LCD_SET_PAGE]|OP_PAGE(1));
+    commands[1] = (uint8_t)(lcdcmds[LCD_SET_PAGE]|OP_PAGE(5));
     commands[2] = (uint8_t)(lcdcmds[LCD_SET_COLUMN_MSB]|OP_COL_MSB(0));
     commands[3] = (uint8_t)(lcdcmds[LCD_SET_COLUMN_LSB]|OP_COL_LSB(0));
+    #else
+    //commands[0] = 0x40;
+    commands[0] = 0x10;
+    commands[1] = 0x00;
+    commands[2] = 0xB0; // page 1
+
+    #endif
     m_cs_enable();
     drv_spi3_tx(commands,4);
-    m_cs_disable();
+    //m_cs_disable();
 
-    HAL_Delay(5);  /* delay 5 ms */
+    //HAL_Delay(5);  /* delay 5 ms */
 
     // Now send data to LCD
     m_set_data();
-    m_cs_enable();
-    for(x=0;x<50;x++)
-        m_lcd_buffer[1][x] = 0x55;
-    drv_spi3_tx(&(m_lcd_buffer[1][0]), 50);
+    //m_cs_enable();
+    for(x=0;x<30;x++)
+        m_lcd_buffer[1][x] = 0xFF;
+    drv_spi3_tx(&(m_lcd_buffer[1][0]), 30);
     m_cs_disable();
+    nop();
 #endif
 
     return;
@@ -353,11 +386,11 @@ void _lcd_draw()
 void _lcd_set_pixel(uint8_t row, uint8_t col)
 {
     uint8_t i,p;
-    i = (row%LCD_ROWS_PER_PAGE);
-    p = (uint8_t)(row-(i*8));
-    // i is the page index, p is the row in the page
+    p = (row/LCD_ROWS_PER_PAGE);    // p is the page
+    i = (uint8_t)(row-(p*8));       // i is the index in the byte
+
     #ifndef LCD_DOUBLE_BUFFER
-    m_lcd_buffer[i][col] = (uint8_t)(m_lcd_buffer[i][col]&(~(1<<p)));
+    m_lcd_buffer[p][col] = (uint8_t)(m_lcd_buffer[p][col]|(1<<i));
     #else
     nop();
     #endif
@@ -367,11 +400,11 @@ void _lcd_set_pixel(uint8_t row, uint8_t col)
 void _lcd_clear_pixel(uint8_t row, uint8_t col)
 {
     uint8_t i,p;
-    i = (row%LCD_ROWS_PER_PAGE);
+    i = (row/LCD_ROWS_PER_PAGE);
     p = (uint8_t)(row-(i*8));
     // i is the page index, p is the row in the page
     #ifndef LCD_DOUBLE_BUFFER
-    m_lcd_buffer[i][col] = (uint8_t)(m_lcd_buffer[i][col]|(1<<p));
+    m_lcd_buffer[i][col] = (uint8_t)(m_lcd_buffer[i][col]&(~(1<<p)));
     #else
     nop();
     #endif
@@ -382,15 +415,28 @@ void _lcdDEBUG_test_pattern1()
 {
     uint8_t row,col;
     drv_lcd_blank();
-    for(row=0;row<LCD_ROWS;row++)
+#if 0
+    for(row=0;row<8;row++)
     {
         // every other pixel
-        //for(col=(uint8_t)(row&1);col<LCD_COLS;col+=2)
         for(col=0;col<LCD_COLS;col=(uint8_t)(col+2))
+        {
+            //_lcd_set_pixel(row,col);
+            m_lcd_buffer[row][col] = 0xFF;
+        }
+    }
+#else
+    for(row=0;row<LCD_ROWS;row+=1)
+    {
+        nop();
+        // every other pixel
+        //for(col=(uint8_t)(row&1);col<LCD_COLS;col+=2)
+        for(col=(row&1);col<LCD_COLS;col=(uint8_t)(col+2))
         {
             _lcd_set_pixel(row,col);
         }
     }
+#endif
     return;
 }
 // eof
