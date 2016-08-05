@@ -12,10 +12,19 @@ cd  ~/Downloads/armToolchainDownloads
 # This may already be done
 # sudo apt-get install default-jre
 
-# Download and install Eclipse
+# Download and install Eclipse Luna
+# This is an older version, but may be useful if the FreeRTOS StaveViewer Eclipse plugin does not work in Eclipse Mars.
+# wget -c http://mirrors.ustc.edu.cn/eclipse/technology/epp/downloads/release/luna/SR2/eclipse-cpp-luna-SR2-linux-gtk-x86_64.tar.gz
+# sudo mkdir /usr/local/eclipse-luna
+# sudo tar xvf ~/Downloads/armToolchainDownloads/eclipse-cpp-luna-SR2-linux-gtk-x86_64.tar.gz -C /usr/local/eclipse-luna
+# sudo ln -s /usr/local/eclipse-luna/eclipse/eclipse /usr/local/bin/eclipse-luna
+
+# Download and install Eclipse Mars
 wget -c http://mirrors.ustc.edu.cn/eclipse/technology/epp/downloads/release/mars/2/eclipse-cpp-mars-2-linux-gtk-x86_64.tar.gz
 sudo tar xvf ~/Downloads/armToolchainDownloads/eclipse-cpp-mars-2-linux-gtk-x86_64.tar.gz -C /usr/local/
 sudo ln -s /usr/local/eclipse/eclipse /usr/local/bin/eclipse
+
+
 
 # This first batch of instructions will be a summary of the instructions
 # found at http://gnuarmeclipse.github.io/install/. This page contains
