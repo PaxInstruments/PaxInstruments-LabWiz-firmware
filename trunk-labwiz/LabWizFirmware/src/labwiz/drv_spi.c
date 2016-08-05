@@ -41,6 +41,14 @@ bool drv_spi1_txrx(uint8_t *pTxData, uint8_t *pRxData, uint16_t size)
     result = HAL_SPI_TransmitReceive(&hspi1, pTxData, pRxData, size, HAL_MAX_DELAY);
     return (result==HAL_OK);
 }
+bool drv_spi1_tx(uint8_t *pTxData, uint16_t size)
+{
+    // Need uint32_t Timeout?
+    HAL_StatusTypeDef result;
+    result = HAL_SPI_Transmit(&hspi1, pTxData, size, HAL_MAX_DELAY);
+    return (result==HAL_OK);
+}
+
 
 bool drv_spi2_txrx(uint8_t *pTxData, uint8_t *pRxData, uint16_t size)
 {

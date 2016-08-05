@@ -42,6 +42,14 @@
 //
 // Should the pin ever change it's trivial to update code
 
+#define port_none(func)       port_none_##func
+#define port_none_set()       asm("nop")
+#define port_none_clear()     asm("nop")
+#define port_none_write(V)    asm("nop")
+#define port_none_read()      (0)
+#define port_none_read_lat()  (0)
+#define port_none_toggle()    asm("nop")
+
 // PortA
 #define porta_0(func)       porta_0_##func
 #define porta_0_set()       do{SET(PORTA,0);}while(0)
@@ -59,6 +67,14 @@
 #define porta_1_read_lat()  (READ_LAT(PORTA,1))
 #define porta_1_toggle()    do{TOGGLE(PORTA,1);}while(0)
 
+#define porta_3(func)       porta_3_##func
+#define porta_3_set()       do{SET(PORTA,3);}while(0)
+#define porta_3_clear()     do{CLR(PORTA,3);}while(0)
+#define porta_3_write(V)    do{WRITE(PORTA,3,(V));}while(0)
+#define porta_3_read()      (READ(PORTA,3))
+#define porta_3_read_lat()  (READ_LAT(PORTA,3))
+#define porta_3_toggle()    do{TOGGLE(PORTA,3);}while(0)
+
 #define porta_8(func)       porta_8_##func
 #define porta_8_set()       do{SET(PORTA,8);}while(0)
 #define porta_8_clear()     do{CLR(PORTA,8);}while(0)
@@ -68,6 +84,31 @@
 #define porta_8_toggle()    do{TOGGLE(PORTA,8);}while(0)
 
 // PortB
+
+#define portb_6(func)       portb_6_##func
+#define portb_6_set()       do{SET(PORTB,6);}while(0)
+#define portb_6_clear()     do{CLR(PORTB,6);}while(0)
+#define portb_6_write(V)    do{WRITE(PORTB,6,(V));}while(0)
+#define portb_6_read()      (READ(PORTB,6))
+#define portb_6_read_lat()  (READ_LAT(PORTB,6))
+#define portb_6_toggle()    do{TOGGLE(PORTB,6);}while(0)
+
+#define portb_7(func)       portb_7_##func
+#define portb_7_set()       do{SET(PORTB,7);}while(0)
+#define portb_7_clear()     do{CLR(PORTB,7);}while(0)
+#define portb_7_write(V)    do{WRITE(PORTB,7,(V));}while(0)
+#define portb_7_read()      (READ(PORTB,7))
+#define portb_7_read_lat()  (READ_LAT(PORTB,7))
+#define portb_7_toggle()    do{TOGGLE(PORTB,7);}while(0)
+
+#define portb_8(func)       portb_8_##func
+#define portb_8_set()       do{SET(PORTB,8);}while(0)
+#define portb_8_clear()     do{CLR(PORTB,8);}while(0)
+#define portb_8_write(V)    do{WRITE(PORTB,8,(V));}while(0)
+#define portb_8_read()      (READ(PORTB,8))
+#define portb_8_read_lat()  (READ_LAT(PORTB,8))
+#define portb_8_toggle()    do{TOGGLE(PORTB,8);}while(0)
+
 
 #define portb_9(func)       portb_9_##func
 #define portb_9_set()       do{SET(PORTB,9);}while(0)

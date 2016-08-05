@@ -1,3 +1,4 @@
+#if 0
 /**
   ******************************************************************************
   * @file    sd_diskio.c
@@ -197,3 +198,5 @@ DRESULT SD_ioctl(BYTE lun, BYTE cmd, void *buff)
   
 /************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/
 
+
+#endif

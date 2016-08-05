@@ -57,12 +57,8 @@
 #define MOD4_GPIO1_GPIO_Port GPIOB
 #define SW_E_Pin GPIO_PIN_2
 #define SW_E_GPIO_Port GPIOB
-#define SW_C_Pin GPIO_PIN_7
-#define SW_C_GPIO_Port GPIOC
 #define VBUS_Pin GPIO_PIN_9
 #define VBUS_GPIO_Port GPIOC
-#define SW_D_Pin GPIO_PIN_8
-#define SW_D_GPIO_Port GPIOA
 #define SW_B_Pin GPIO_PIN_10
 #define SW_B_GPIO_Port GPIOC
 #define SW_A_Pin GPIO_PIN_11

@@ -30,28 +30,48 @@ void labwiz_init()
 
 void labwiz_task_init()
 {
+    BaseType_t result;
+    nop();
     // What is stack requirements for each task
-    xTaskCreate( TestTaskFunction,
+
+    // The stack argument is the number of words the stack
+    // will be, not bytes.  Our stack width is 4, so a value
+    // of 100entries  will really be 400 bytes
+
+    // configMINIMAL_STACK_SIZE = 128 = 512 bytes
+    // if we have 3k of stack, this is 6 functions!
+    result = xTaskCreate( TestTaskFunction,
               "TestTask",
               configMINIMAL_STACK_SIZE,
               NULL,
               osPriorityNormal,
               NULL
     );
-    xTaskCreate( drv_uart_task,
+    // DEBUG
+    if(result!=pdPASS)
+        while(1) nop();
+    result = xTaskCreate( drv_uart_task,
             "UARTTask",
             configMINIMAL_STACK_SIZE,
             NULL,
             osPriorityNormal,
             NULL
     );
-    xTaskCreate( drv_lcd_task,
+    // DEBUG
+    if(result!=pdPASS)
+        while(1) nop();
+#if 1
+    result = xTaskCreate( drv_lcd_task,
             "LCDTask",
-            configMINIMAL_STACK_SIZE*3,
+            configMINIMAL_STACK_SIZE*2,
             NULL,
             osPriorityNormal,
             NULL
     );
+    // DEBUG
+    if(result!=pdPASS)
+        while(1) nop();
+#endif
 
     return;
 }
