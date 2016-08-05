@@ -1,3 +1,4 @@
+#if 0
 /**
   ******************************************************************************
   * @file    stm32f1xx_hal_can.c
@@ -1426,3 +1427,4 @@ static HAL_StatusTypeDef CAN_Receive_IT(CAN_HandleTypeDef* hcan, uint8_t FIFONum
   */
 
 /************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/
+#endif

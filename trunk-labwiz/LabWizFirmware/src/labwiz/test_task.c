@@ -14,6 +14,9 @@
 
 #include "labwiz/drv_serial.h"
 
+#define led1(func)          porta_8(func)
+#define bl(func)            portb_6(func)
+
 #define TOGGLE_PERIOD_MS        500
 
 char m_scratch[100];
@@ -47,4 +50,24 @@ void TestTaskFunction( void *pvParameters )
     return;
 }
 
+void TestTaskFunction2( void *pvParameters )
+{
+
+    for( ;; )
+    {
+        // Do all the things
+        vTaskDelay(portTICK_PERIOD_MS*TOGGLE_PERIOD_MS);
+
+        // Togle LED and send string
+        bl(toggle());
+
+    }
+
+    /* Should the task implementation ever break out of the above loop
+    then the task must be deleted before reaching the end of this function.
+    The NULL parameter passed to the vTaskDelete() function indicates that
+    the task to be deleted is the calling (this) task. */
+    vTaskDelete( NULL );
+    return;
+}
 //eof

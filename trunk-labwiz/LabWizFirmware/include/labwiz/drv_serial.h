@@ -27,6 +27,7 @@ uint8_t drv_uart1_rx(uint8_t* pData, uint8_t max_size);
 // This is the uart driver task, reading the RX data and putting
 // it into a RAM buffer
 void drv_uart_task( void *pvParameters );
+void TestTaskFunction2( void *pvParameters );
 
 #endif
 

@@ -14,6 +14,8 @@ void drv_spi_init(void);
 
 bool drv_spi1_txrx(uint8_t *pTxData, uint8_t *pRxData, uint16_t size);
 
+bool drv_spi1_tx(uint8_t *pTxData, uint16_t size);
+
 bool drv_spi2_txrx(uint8_t *pTxData, uint8_t *pRxData, uint16_t size);
 
 bool drv_spi3_txrx(uint8_t *pTxData, uint8_t *pRxData, uint16_t size);

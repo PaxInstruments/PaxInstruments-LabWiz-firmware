@@ -14,6 +14,8 @@ void drv_lcd_init(void);
 
 void drv_lcd_task( void *pvParameters );
 
+void drv_lcd_blank(void);
+
 #endif
 
 //eof
