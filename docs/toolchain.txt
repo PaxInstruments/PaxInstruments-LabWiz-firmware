@@ -24,8 +24,6 @@ wget -c http://mirrors.ustc.edu.cn/eclipse/technology/epp/downloads/release/mars
 sudo tar xvf ~/Downloads/armToolchainDownloads/eclipse-cpp-mars-2-linux-gtk-x86_64.tar.gz -C /usr/local/
 sudo ln -s /usr/local/eclipse/eclipse /usr/local/bin/eclipse
 
-
-
 # This first batch of instructions will be a summary of the instructions
 # found at http://gnuarmeclipse.github.io/install/. This page contains
 # several big steps that link to sub pages.
