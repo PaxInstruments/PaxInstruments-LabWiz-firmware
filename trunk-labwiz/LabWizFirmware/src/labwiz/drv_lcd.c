@@ -162,7 +162,8 @@ void lcd_init()
     m_bl_enable();
 
 
-    #if 1
+    // DEBUG tests
+    #if 0
     lcd_set_pixel(0,0);
     lcd_set_pixel(0,131);
     lcd_set_pixel(63,131);
@@ -170,8 +171,11 @@ void lcd_init()
     lcd_set_pixel(32,66);
     #endif
 
-    //lcd_line(32, 0, 32, 131);
-    //lcd_line(0, 66, 63, 66);
+    #if 0
+    lcd_line(32, 0, 32, 131);
+    lcd_line(0, 66, 63, 66);
+    #endif
+
     _lcd_draw();
 
     nop();
@@ -378,7 +382,7 @@ void _lcd_setup()
     commands[0] = (lcdcmds[LCD_REGULATION_RATIO]|OP_REG_RATIO(6));  // 6 based on u8glib
     commands[1] = (lcdcmds[LCD_INVERT_DISPLAY]|OP_NORMAL);  // NOT inverted
     commands[2] = (lcdcmds[LCD_CONTRAST_START]);
-    commands[3] = (lcdcmds[LCD_CONTRAST_VALUE]|OP_CONTRAST(0x2F)); // Contrast value
+    commands[3] = (lcdcmds[LCD_CONTRAST_VALUE]|OP_CONTRAST(0x28)); // Contrast value
     //commands[4] = (lcdcmds[LCD_POWER]|OP_DISPLAY_ON);
     commands[4] = 0xAF; // force on
     // Now send these commands to LCD

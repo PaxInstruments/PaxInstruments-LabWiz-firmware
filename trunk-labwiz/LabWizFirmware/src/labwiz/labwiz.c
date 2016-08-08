@@ -18,6 +18,7 @@
 #include "task.h"
 #include "cmsis_os.h"
 
+#define DEBUG   1
 
 void labwiz_init()
 {
@@ -39,7 +40,7 @@ void labwiz_task_init()
     // of 100entries  will really be 400 bytes
 
     // configMINIMAL_STACK_SIZE = 128 = 512 bytes
-    // if we have 3k of stack, this is 6 functions!
+    // if we have 3k of stack, this is 6 tasks!
     result = xTaskCreate( TestTaskFunction,
               "TestTask",
               configMINIMAL_STACK_SIZE,
@@ -49,7 +50,7 @@ void labwiz_task_init()
     );
     // DEBUG
     if(result!=pdPASS)
-        while(1) nop();
+        while(DEBUG) nop();
     result = xTaskCreate( drv_uart_task,
             "UARTTask",
             configMINIMAL_STACK_SIZE,
@@ -59,8 +60,7 @@ void labwiz_task_init()
     );
     // DEBUG
     if(result!=pdPASS)
-        while(1) nop();
-#if 1
+        while(DEBUG) nop();
     result = xTaskCreate( lcd_task,
             "LCDTask",
             configMINIMAL_STACK_SIZE*2,
@@ -70,8 +70,7 @@ void labwiz_task_init()
     );
     // DEBUG
     if(result!=pdPASS)
-        while(1) nop();
-#endif
+        while(DEBUG) nop();
 
     return;
 }
