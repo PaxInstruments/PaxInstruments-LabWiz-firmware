@@ -13,6 +13,7 @@
 #include "labwiz/drv_spi.h"
 #include "labwiz/drv_lcd.h"
 #include "labwiz/port.h"
+#include "labwiz/font5x7.h"
 
 // NOTE: The LCD driver is an ST7567
 // RESET is active low
@@ -142,33 +143,44 @@ uint8_t m_lcd_buffer[2][LCD_PAGES][LCD_COLS];
 // ---------------------------------------------------------------------------
 void _lcd_setup(void);
 void _lcd_draw(void);
-void _lcd_set_pixel(uint8_t row, uint8_t col);
-void _lcd_clear_pixel(uint8_t row, uint8_t col);
 void _lcdDEBUG_test_pattern1(void);
 
 // Public functions
 // ---------------------------------------------------------------------------
 
-void drv_lcd_init()
+void lcd_init()
 {
     m_cs_disable();
     m_reset_on();
     HAL_Delay(1);  /* delay 1 ms */
-    m_bl_enable();
-    m_cs_disable();
     m_set_cmd();
 
-    drv_lcd_blank();
-    // Turn on middle pixel
-    _lcd_set_pixel(32,66);
+    lcd_blank();
 
     _lcd_setup();
+
+    m_bl_enable();
+
+
+    #if 1
+    lcd_set_pixel(0,0);
+    lcd_set_pixel(0,131);
+    lcd_set_pixel(63,131);
+    lcd_set_pixel(63,0);
+    lcd_set_pixel(32,66);
+    #endif
+
+    //lcd_line(32, 0, 32, 131);
+    //lcd_line(0, 66, 63, 66);
+    _lcd_draw();
+
+    nop();
 
     return;
 }
 
 
-void drv_lcd_task( void *pvParameters )
+void lcd_task( void *pvParameters )
 {
     volatile UBaseType_t lcd_max_stack_depth;
     // This is a task to send data to the LCD, we block
@@ -184,7 +196,7 @@ void drv_lcd_task( void *pvParameters )
         vTaskDelay(portTICK_PERIOD_MS*1000);
         //pin_bl(toggle());
         #ifndef LCD_DOUBLE_BUFFER
-        //_lcd_draw();
+        _lcd_draw();
         #else
         memcpy(send buffer, draw buffer, size);
         //lcd_draw(send_buffer);
@@ -202,11 +214,127 @@ void drv_lcd_task( void *pvParameters )
 }
 
 
-void drv_lcd_blank()
+void lcd_blank()
 {
     memset(m_lcd_buffer,0,sizeof(m_lcd_buffer));
     return;
 }
+
+// Disable conversion warnings, we are doing all sorts of bit operations
+// and the compiler complains about everything.
+#pragma GCC diagnostic ignored "-Wconversion"
+
+void lcd_set_pixel(uint8_t row, uint8_t col)
+{
+    volatile uint8_t i,p;
+    //p = (row/LCD_ROWS_PER_PAGE);    // p is the page
+    p = (row>>3); // div by 8
+    i = (uint8_t)(row-(p*8));       // i is the index in the byte
+
+    #ifndef LCD_DOUBLE_BUFFER
+    m_lcd_buffer[p][col] = (uint8_t)(m_lcd_buffer[p][col]|(1<<(7-i)));
+    #else
+    nop();
+    #endif
+
+    return;
+}
+void lcd_clear_pixel(uint8_t row, uint8_t col)
+{
+    volatile uint8_t i,p;
+    //p = (row/LCD_ROWS_PER_PAGE);
+    p = (row>>3);
+    i = (uint8_t)(row-(p*8));
+    // i is the page index, p is the row in the page
+    #ifndef LCD_DOUBLE_BUFFER
+    m_lcd_buffer[i][col] = (uint8_t)(m_lcd_buffer[p][col]&(~(1<<i)));
+    #else
+    nop();
+    #endif
+    return;
+}
+
+// This is kinda ugly, is there a better way to write text across pages?
+// TODO: Improve
+void lcd_print(char * st,uint8_t row,uint8_t col)
+{
+    char c;
+    uint8_t * ptr;
+    uint8_t page,bits,x,data,pos,cnt,src;
+    if(row>LCD_ROWS || col>130) return;
+    row+=8;
+    while(*st)
+    {
+        c = *st;
+        pos = col;
+        ptr=&(Font5x7[(c-' ')*5]);
+
+        // Draw X bits in this row
+        page = (row>>3);
+        bits = row%8;
+        if(bits>0 && page<(LCD_PAGES-1))
+        {
+            for(x=0;x<5;x++)
+            {
+                data = *ptr;
+                data = data>>(8-bits);
+                // Flip font vvvvvvvvvvv
+                src = 0;
+                for(cnt=0;cnt<8;cnt++){ src<<=1; src|=(data&1); data>>=1;}
+                // Flip font ^^^^^^^^^^^
+                m_lcd_buffer[page][pos++] |= src; // or it? or overwrite with just =  ?
+                ptr++;
+            }
+        }
+        // If we displayed less than the full 8 bits, then we have 8-bits left
+        // to draw on the next page
+        if(bits<8 && page>0)
+        {
+            // 8-bits remain in the lower page
+            bits = 8-bits;
+            pos = col;
+            page--;
+            ptr=&(Font5x7[(c-' ')*5]);
+            for(x=0;x<5;x++)
+            {
+                data = *ptr;
+                data = data<<(8-bits);
+                // Flip font vvvvvvvvvvv
+                src = 0;
+                for(cnt=0;cnt<8;cnt++){ src<<=1; src|=(data&1); data>>=1;}
+                // Flip font ^^^^^^^^^^^
+                m_lcd_buffer[page][pos++] |= src; // or it? or overwrite with just =  ?
+                ptr++;
+            }
+        }
+
+        st++;
+        col+=6;
+    };
+    return;
+}
+
+// Found here: http://rosettacode.org/wiki/Bitmap/Bresenham%27s_line_algorithm#C
+void lcd_line(uint8_t r0, uint8_t c0, uint8_t r1, uint8_t c1)
+{
+
+  int16_t dr = abs(r1-r0), sr = r0<r1 ? 1 : -1;
+  int16_t dc = abs(c1-c0), sc = c0<c1 ? 1 : -1;
+  int16_t err = (dr>dc ? dr : -dc)>>1, e2;
+
+  for(;;)
+  {
+    lcd_set_pixel(r0,c0);
+    if (r0==r1 && c0==c1) break;
+    e2 = err;
+    if (e2 >-dr) { err -= dc; r0 += sr; }
+    if (e2 < dc) { err += dr; c0 += sc; }
+  }
+  return;
+}
+
+// Re-enable the warnings
+#pragma GCC diagnostic warning "-Wconversion"
 
 // Private functions
 // ---------------------------------------------------------------------------
@@ -217,7 +345,7 @@ void drv_lcd_blank()
 void _lcd_setup()
 {
     uint8_t commands[15];
-#if 1
+
     /*
     This is the LCD controller strtup sequence
     From the datasheet:
@@ -258,50 +386,6 @@ void _lcd_setup()
 
     m_cs_disable();
 
-#else
-    m_reset_off();
-    HAL_Delay(1);  /* delay 1 ms */
-
-    m_cs_enable();
-    commands[0] = 0xa3; /* 0x0a3: LCD bias 1/7 (suggested for the pi13264) */
-    commands[1] = 0xa1; /* 0x0a1: ADC set to reverse (suggested for the pi13264) */
-    commands[2] = 0xc0; /* common output mode: set scan direction normal operation/SHL Select, 0x0c0 --> SHL = 0, normal, 0x0c8 --> SHL = 1 */
-    commands[3] = 0x40; /* set display start line */
-
-
-    //commands[4] = 0x28 | 0x04;     /* power control: turn on voltage converter */
-    drv_spi3_tx(commands,4);
-
-    commands[0] = 0x28 | 0x07;     /* power control: turn on voltage follower */
-    drv_spi3_tx(commands,1);
-
-    HAL_Delay(50);  /* delay 50 ms */
-    commands[0] = 0x26;            /* set V0 voltage resistor ratio to 6 */
-
-    #if 1
-    commands[1] = 0xa6;            /* display normal (Not invert) */
-    #else
-    commands[1] = 0xa7;            /* display invert */
-    #endif
-
-    commands[2] = 0x81;
-    commands[3] = 0x28; // contrast value
-    //commands[4] = 0xF8; // Booster 4x
-    //commands[5] = 0x00;
-    /*0x0ac,*/        /* indicator */
-    /*0x000,*/        /* disable */
-    commands[4] = 0xaf;            /* display on */
-    drv_spi3_tx(commands,5);
-
-     m_cs_disable();
-#endif
-
-    m_bl_enable();
-
-    // DEBUG
-    _lcdDEBUG_test_pattern1();
-    _lcd_draw();
-
     return;
 }
 
@@ -316,7 +400,6 @@ void _lcd_draw()
      * (6) Display Data Write
      * (1) Display ON/OFF <-- optional????
      */
-#if 1
     uint8_t page;
     uint8_t commands[5];
 
@@ -325,7 +408,7 @@ void _lcd_draw()
     {
         m_set_cmd();
         commands[0] = (uint8_t)(lcdcmds[LCD_SET_START_LINE]|OP_START_LINE(0));
-        commands[1] = (uint8_t)(lcdcmds[LCD_SET_PAGE]|OP_PAGE(page));
+        commands[1] = (uint8_t)(lcdcmds[LCD_SET_PAGE]|OP_PAGE((LCD_PAGES-1)-page));
         commands[2] = (uint8_t)(lcdcmds[LCD_SET_COLUMN_MSB]|OP_COL_MSB(0));
         commands[3] = (uint8_t)(lcdcmds[LCD_SET_COLUMN_LSB]|OP_COL_LSB(0));
         // Now send these commands to LCD
@@ -334,109 +417,29 @@ void _lcd_draw()
 
         m_set_data();
         // Now send data to LCD
-        #if 1
         drv_spi3_tx(&(m_lcd_buffer[page][0]), LCD_COLS);
-        #else
-        m_lcd_buffer[page][0] = 0x55;
-        m_lcd_buffer[page][1] = 0xAA;
-        m_lcd_buffer[page][2] = 0x55;
-        m_lcd_buffer[page][3] = 0xAA;
-        drv_spi3_tx(&(m_lcd_buffer[page][0]), 4);
-        #endif
         m_cs_disable();
 
     }
-#else
-    uint8_t commands[10];
-    uint8_t x;
-    // Now send these commands to LCD
-    m_set_cmd();
-    #if 1
-    commands[0] = (uint8_t)(lcdcmds[LCD_SET_START_LINE]|OP_START_LINE(0));
-    commands[1] = (uint8_t)(lcdcmds[LCD_SET_PAGE]|OP_PAGE(5));
-    commands[2] = (uint8_t)(lcdcmds[LCD_SET_COLUMN_MSB]|OP_COL_MSB(0));
-    commands[3] = (uint8_t)(lcdcmds[LCD_SET_COLUMN_LSB]|OP_COL_LSB(0));
-    #else
-    //commands[0] = 0x40;
-    commands[0] = 0x10;
-    commands[1] = 0x00;
-    commands[2] = 0xB0; // page 1
-
-    #endif
-    m_cs_enable();
-    drv_spi3_tx(commands,4);
-    //m_cs_disable();
-
-    //HAL_Delay(5);  /* delay 5 ms */
-
-    // Now send data to LCD
-    m_set_data();
-    //m_cs_enable();
-    for(x=0;x<30;x++)
-        m_lcd_buffer[1][x] = 0xFF;
-    drv_spi3_tx(&(m_lcd_buffer[1][0]), 30);
-    m_cs_disable();
-    nop();
-#endif
 
     return;
 }
 
-
-void _lcd_set_pixel(uint8_t row, uint8_t col)
-{
-    uint8_t i,p;
-    p = (row/LCD_ROWS_PER_PAGE);    // p is the page
-    i = (uint8_t)(row-(p*8));       // i is the index in the byte
-
-    #ifndef LCD_DOUBLE_BUFFER
-    m_lcd_buffer[p][col] = (uint8_t)(m_lcd_buffer[p][col]|(1<<i));
-    #else
-    nop();
-    #endif
-
-    return;
-}
-void _lcd_clear_pixel(uint8_t row, uint8_t col)
-{
-    uint8_t i,p;
-    i = (row/LCD_ROWS_PER_PAGE);
-    p = (uint8_t)(row-(i*8));
-    // i is the page index, p is the row in the page
-    #ifndef LCD_DOUBLE_BUFFER
-    m_lcd_buffer[i][col] = (uint8_t)(m_lcd_buffer[i][col]&(~(1<<p)));
-    #else
-    nop();
-    #endif
-    return;
-}
-
+// DEBUG functions
 void _lcdDEBUG_test_pattern1()
 {
     uint8_t row,col;
-    drv_lcd_blank();
-#if 0
-    for(row=0;row<8;row++)
-    {
-        // every other pixel
-        for(col=0;col<LCD_COLS;col=(uint8_t)(col+2))
-        {
-            //_lcd_set_pixel(row,col);
-            m_lcd_buffer[row][col] = 0xFF;
-        }
-    }
-#else
-    for(row=0;row<LCD_ROWS;row+=1)
+    lcd_blank();
+    for(row=0;row<LCD_ROWS;row=(uint8_t)(row+1))
     {
         nop();
         // every other pixel
-        //for(col=(uint8_t)(row&1);col<LCD_COLS;col+=2)
         for(col=(row&1);col<LCD_COLS;col=(uint8_t)(col+2))
         {
-            _lcd_set_pixel(row,col);
+            lcd_set_pixel(row,col);
         }
     }
-#endif
     return;
 }
+
 // eof

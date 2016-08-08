@@ -24,7 +24,7 @@ void labwiz_init()
     drv_uart_init();
     drv_esp8266_init();
     drv_spi_init();
-    drv_lcd_init();
+    lcd_init();
     return;
 }
 
@@ -61,7 +61,7 @@ void labwiz_task_init()
     if(result!=pdPASS)
         while(1) nop();
 #if 1
-    result = xTaskCreate( drv_lcd_task,
+    result = xTaskCreate( lcd_task,
             "LCDTask",
             configMINIMAL_STACK_SIZE*2,
             NULL,
