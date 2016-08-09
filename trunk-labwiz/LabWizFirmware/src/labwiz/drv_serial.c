@@ -355,6 +355,7 @@ void USART2_IRQHandler()
     }
 #endif
     /* UART in mode Receiver ---------------------------------------------------*/
+#if 0
     if( (huart2.Instance->SR & UART_FLAG_RXNE) &&
             (huart2.Instance->CR1 & USART_CR1_RXNEIE) )
     {
@@ -373,6 +374,8 @@ void USART2_IRQHandler()
         #endif
 
     }
+#endif
+
 #if 0
     /* UART in mode Transmitter ------------------------------------------------*/
     if( (huart2.Instance->SR & UART_FLAG_TXE) &&
@@ -410,7 +413,7 @@ void USART2_IRQHandler()
         uint32_t tmpreg;
         // Reads will clear the error flags?
         //__HAL_UART_CLEAR_PEFLAG(huart);
-        tmpreg = huart2.Instance->SR;
+        //tmpreg = huart2.Instance->SR;
     }
 #endif
     return;

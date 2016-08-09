@@ -1,3 +1,4 @@
+#if 0
 /**
  ******************************************************************************
   * @file    user_diskio.h
@@ -57,3 +58,4 @@ extern Diskio_drvTypeDef  USER_Driver;
 #endif /* __USER_DISKIO_H */
 
 /************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/
+#endif

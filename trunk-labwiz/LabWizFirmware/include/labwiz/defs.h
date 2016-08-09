@@ -26,6 +26,8 @@
 #define interrupts_enable()     __enable_irq ();
 #define interrupts_disable()    __disable_irq ();
 
+void setup(void);
+void loop(void);
 
 #endif // End include guard
 
