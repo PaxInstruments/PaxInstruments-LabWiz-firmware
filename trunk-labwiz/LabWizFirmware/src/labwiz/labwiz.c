@@ -146,9 +146,10 @@ void labwiz_task_init()
             "AppTask",
             configMINIMAL_STACK_SIZE*2,
             NULL,
-            osPriorityLow,
+            osPriorityNormal,
             NULL
     );
+
     // DEBUG
     if(result!=pdPASS)
         while(DEBUG) nop();
