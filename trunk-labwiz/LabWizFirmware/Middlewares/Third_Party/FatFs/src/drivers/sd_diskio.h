@@ -1,4 +1,3 @@
-#if 0
 /**
   ******************************************************************************
   * @file    sd_diskio.h 
@@ -40,4 +39,3 @@ extern Diskio_drvTypeDef  SD_Driver;
 
 /************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/
 
-#endif

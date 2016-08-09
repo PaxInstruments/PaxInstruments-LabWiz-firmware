@@ -30,7 +30,7 @@
   *
   ******************************************************************************
   */
-#if 0
+#define BUS_4BITS 1
 /* USER CODE BEGIN 0 */
 /* Includes ------------------------------------------------------------------*/
 #include "bsp_driver_sd.h"
@@ -302,4 +302,3 @@ uint8_t BSP_SD_IsDetected(void)
 /* USER CODE END AdditionalCode */
 
 /************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/
-#endif

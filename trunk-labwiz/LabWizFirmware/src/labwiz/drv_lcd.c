@@ -163,7 +163,7 @@ void lcd_init()
 
 
     // DEBUG tests
-    #if 0
+    #if 1
     lcd_set_pixel(0,0);
     lcd_set_pixel(0,131);
     lcd_set_pixel(63,131);
@@ -171,7 +171,7 @@ void lcd_init()
     lcd_set_pixel(32,66);
     #endif
 
-    #if 0
+    #if 1
     lcd_line(32, 0, 32, 131);
     lcd_line(0, 66, 63, 66);
     #endif
@@ -340,6 +340,18 @@ void lcd_line(uint8_t r0, uint8_t c0, uint8_t r1, uint8_t c1)
 // Re-enable the warnings
 #pragma GCC diagnostic warning "-Wconversion"
 
+
+void lcd_backlight_toggle()
+{
+    pin_bl(toggle());
+}
+void lcd_backlight_enable(bool enable)
+{
+    if(enable)
+        pin_bl(set());
+    else
+        pin_bl(clear());
+}
 // Private functions
 // ---------------------------------------------------------------------------
 

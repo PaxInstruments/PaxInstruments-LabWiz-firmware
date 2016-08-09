@@ -24,6 +24,10 @@ void lcd_print(char * st,uint8_t row,uint8_t col);
 
 void lcd_line(uint8_t x0, uint8_t y0, uint8_t x1, uint8_t y1);
 
+void lcd_backlight_toggle(void);
+
+void lcd_backlight_enable(bool enable);
+
 #endif
 
 //eof

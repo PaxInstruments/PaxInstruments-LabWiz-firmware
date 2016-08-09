@@ -1,3 +1,4 @@
+#if 0
 /**
  ******************************************************************************
   * @file    user_diskio.c
@@ -181,3 +182,4 @@ DRESULT USER_ioctl (
 #endif /* _USE_IOCTL == 1 */
 
 /************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/
+#endif
