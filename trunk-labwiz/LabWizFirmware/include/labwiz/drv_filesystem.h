@@ -10,6 +10,10 @@
 
 #include "ff.h"
 
+bool fs_open_path(char * path);
+
+bool fs_card_detected(void);
+
 #endif
 
 //eof

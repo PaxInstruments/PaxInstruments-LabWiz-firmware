@@ -8,7 +8,29 @@
 #include "labwiz/defs.h"
 #include "labwiz/drv_filesystem.h"
 
-#include "ff.h"
+/*****************************************************************************
+ *
+ *       FIL fp;
+ *       FRESULT ret;
+ *       uint32_t bytes;
+ *
+ *       if(fs_card_detected() && fs_open_path(""))
+ *       {
+ *           ret = f_open (&fp,"ACGtest.txt", (FA_WRITE | FA_CREATE_ALWAYS) );
+ *           if(ret!=FR_OK)
+ *               nop();
+ *           ret = f_write (&fp, "Testing1234", 11, (UINT*)&bytes);
+ *           if(ret!=FR_OK)
+ *               nop();
+ *           ret = f_write (&fp, "AnotherTest", 11, (UINT*)&bytes);
+ *           if(ret!=FR_OK) // FR_INVALID_OBJECT is ejected, f_mount(NULL,"",0);
+ *               nop();
+ *           ret = f_close (&fp);
+ *           if(ret!=FR_OK)
+ *               nop();
+ *       }
+ *
+ ****************************************************************************/
 
 // Definitions and types
 // ----------------------------------------------------------------------------
@@ -33,7 +55,7 @@ bool fs_open_path(char * path)
 }
 bool fs_card_detected()
 {
-    return (f_open_path("")==FR_OK);
+    return (fs_open_path("")==FR_OK);
 }
 // Private functions
 // ----------------------------------------------------------------------------

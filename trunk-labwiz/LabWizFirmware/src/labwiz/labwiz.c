@@ -20,6 +20,7 @@
 #include "FreeRTOS.h"
 #include "task.h"
 #include "cmsis_os.h"
+#include "fatfs.h"
 
 // Definitions and types
 // ----------------------------------------------------------------------------
@@ -39,13 +40,6 @@
 #define SW_E_EXTI_MASK      (1<<(SW_E_EXTI))
 #define SW_PWR_EXTI_MASK    (1<<(SW_PWR_EXTI))
 
-#define SW_A                SW_A_EXTI
-#define SW_B                SW_B_EXTI
-#define SW_C                SW_C_EXTI
-#define SW_D                SW_D_EXTI
-#define SW_E                SW_E_EXTI
-#define SW_PWR              SW_PWR_EXTI
-
 // Local variables
 // ----------------------------------------------------------------------------
 EXTI_TypeDef * m_exti_struct = ((EXTI_TypeDef *) EXTI_BASE);
@@ -53,14 +47,19 @@ uint32_t m_exti_mask = 0;
 
 xSemaphoreHandle m_labwiz_isr_semaphore;
 
+// The callback for the button presses
+labwiz_btn_callback m_btn_cb;
+
 // Local prototypes
 // ----------------------------------------------------------------------------
 void _labwiz_button_press(uint8_t button);
 void _labwiz_task( void *pvParameters );
-void EXTI15_10_IRQHandler(void);
-void WWDG_IRQHandler(void);
 void _labwiz_app_task( void *pvParameters );
-void sd_test(void);
+void EXTI0_IRQHandler(void);
+void EXTI9_5_IRQHandler(void);
+void EXTI15_10_IRQHandler(void);
+void _exti_ISR(void);
+void WWDG_IRQHandler(void);
 
 // Public functions
 // ----------------------------------------------------------------------------
@@ -75,7 +74,7 @@ void labwiz_init()
 
     m_exti_mask = 0;
     vSemaphoreCreateBinary(m_labwiz_isr_semaphore);
-
+    m_btn_cb = NULL;
 
     /* init code for FATFS */
     MX_FATFS_Init();
@@ -89,9 +88,6 @@ void labwiz_init()
     HAL_NVIC_EnableIRQ(EXTI0_IRQn);
 
     HAL_NVIC_DisableIRQ(WWDG_IRQn);
-
-    // DEBUG
-    sd_test();
 
     return;
 }
@@ -156,27 +152,31 @@ void labwiz_task_init()
             osPriorityNormal,
             NULL
     );
-
     // DEBUG
     if(result!=pdPASS)
         while(DEBUG) nop();
     return;
 }
 
+void labwiz_set_btn_callback(labwiz_btn_callback cb)
+{
+    m_btn_cb = cb;
+    return;
+}
 
 // Private functions
 // ---------------------------------------------------------------------------
 
 void _labwiz_button_press(uint8_t button)
 {
-    switch(button){
-    case SW_A: break;
-    case SW_B: break;
-    case SW_C: break;
-    case SW_D: break;
-    case SW_E: lcd_backlight_toggle(); break;
-    case SW_PWR: break;
-    default: break;
+    if(m_btn_cb!=NULL)
+    {
+        m_btn_cb(button);
+    }else{
+        switch(button){
+        case SW_A: break;
+        default: break;
+        }
     }
     return;
 }
@@ -194,16 +194,16 @@ void _labwiz_task( void *pvParameters )
         { m_exti_mask&=(uint32_t)(~SW_A_EXTI_MASK);_labwiz_button_press(SW_A);}
 
         if(m_exti_mask & SW_B_EXTI_MASK)
-        { m_exti_mask&=(uint32_t)(~SW_A_EXTI_MASK);_labwiz_button_press(SW_B);}
+        { m_exti_mask&=(uint32_t)(~SW_B_EXTI_MASK);_labwiz_button_press(SW_B);}
 
         if(m_exti_mask & SW_C_EXTI_MASK)
-        { m_exti_mask&=(uint32_t)(~SW_A_EXTI_MASK);_labwiz_button_press(SW_C);}
+        { m_exti_mask&=(uint32_t)(~SW_C_EXTI_MASK);_labwiz_button_press(SW_C);}
 
         if(m_exti_mask & SW_D_EXTI_MASK)
-        { m_exti_mask&=(uint32_t)(~SW_A_EXTI_MASK);_labwiz_button_press(SW_D);}
+        { m_exti_mask&=(uint32_t)(~SW_D_EXTI_MASK);_labwiz_button_press(SW_D);}
 
         if(m_exti_mask & SW_E_EXTI_MASK)
-        { m_exti_mask&=(uint32_t)(~SW_A_EXTI_MASK);_labwiz_button_press(SW_E);}
+        { m_exti_mask&=(uint32_t)(~SW_E_EXTI_MASK);_labwiz_button_press(SW_E);}
     }
 
     /* Should the task implementation ever break out of the above loop
@@ -212,23 +212,6 @@ void _labwiz_task( void *pvParameters )
     the task to be deleted is the calling (this) task. */
     vTaskDelete( NULL );
 
-    return;
-}
-
-void EXTI15_10_IRQHandler(void)
-{
-    volatile uint32_t pr;
-    pr = m_exti_struct->PR;
-    // Save the interrupts
-    m_exti_mask = m_exti_mask|pr;
-    // Clear all pending interrupts
-    m_exti_struct->PR = 0x000FFFFF;
-    xSemaphoreGiveFromISR(m_labwiz_isr_semaphore,NULL);
-    return;
-}
-void WWDG_IRQHandler(void)
-{
-    nop();
     return;
 }
 
@@ -258,37 +241,26 @@ __weak void loop()
     return;
 }
 
-// DEBUG
-#include "labwiz/drv_filesystem.h"
-void sd_test()
-{
-    //volatile HAL_SD_ErrorTypedef result;
-    //result = HAL_SD_Init(&hsd,&SDCardInfo);
-    //if(result==SD_OK)
-    {
-        FIL fp;
-        FRESULT ret;
-        uint32_t bytes;
-        FATFS lFatFs;
 
-        if(fs_card_detected())
-        {
-            f_open_path("");
-            ret = f_open (&fp,"ACGtest.txt", (FA_WRITE | FA_CREATE_ALWAYS) );
-            if(ret!=FR_OK)
-                nop();
-            ret = f_write (&fp, "Testing1234", 11, (uint32_t*)&bytes);
-            if(ret!=FR_OK)
-                nop();
-            ret = f_write (&fp, "AnotherTest", 11, (uint32_t*)&bytes);
-            if(ret!=FR_OK) // FR_INVALID_OBJECT is ejected, f_mount(NULL,"",0);
-                nop();
-            ret = f_close (&fp);
-            if(ret!=FR_OK)
-                nop();
-        }
-    }
+
+void EXTI0_IRQHandler(void){_exti_ISR();}
+void EXTI9_5_IRQHandler(void){_exti_ISR();}
+void EXTI15_10_IRQHandler(void){_exti_ISR();}
+void _exti_ISR(void)
+{
+    volatile uint32_t pr;
+    pr = m_exti_struct->PR;
+    // Save the interrupts
+    m_exti_mask = m_exti_mask|pr;
+    // Clear all pending interrupts
+    m_exti_struct->PR = 0x000FFFFF;
+    xSemaphoreGiveFromISR(m_labwiz_isr_semaphore,NULL);
+    return;
+}
+void WWDG_IRQHandler(void)
+{
     nop();
     return;
 }
+
 // eof
