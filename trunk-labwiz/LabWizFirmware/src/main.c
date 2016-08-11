@@ -415,9 +415,6 @@ static void MX_GPIO_Init(void)
 /* StartDefaultTask function */
 void StartDefaultTask(void const * argument)
 {
-  /* init code for FATFS */
-  MX_FATFS_Init();
-
   /* init code for USB_DEVICE */
   MX_USB_DEVICE_Init();
 

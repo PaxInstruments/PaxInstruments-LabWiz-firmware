@@ -60,6 +60,7 @@ void _labwiz_task( void *pvParameters );
 void EXTI15_10_IRQHandler(void);
 void WWDG_IRQHandler(void);
 void _labwiz_app_task( void *pvParameters );
+void sd_test(void);
 
 // Public functions
 // ----------------------------------------------------------------------------
@@ -76,6 +77,9 @@ void labwiz_init()
     vSemaphoreCreateBinary(m_labwiz_isr_semaphore);
 
 
+    /* init code for FATFS */
+    MX_FATFS_Init();
+
     // Enable the External interrupts 10-15 global interrupt
     HAL_NVIC_SetPriority(EXTI15_10_IRQn, 8, 0);
     HAL_NVIC_EnableIRQ(EXTI15_10_IRQn);
@@ -86,13 +90,16 @@ void labwiz_init()
 
     HAL_NVIC_DisableIRQ(WWDG_IRQn);
 
+    // DEBUG
+    sd_test();
+
     return;
 }
 
 void labwiz_task_init()
 {
     BaseType_t result;
-    nop();
+
     // What is stack requirements for each task
 
     // The stack argument is the number of words the stack
@@ -251,4 +258,37 @@ __weak void loop()
     return;
 }
 
+// DEBUG
+#include "labwiz/drv_filesystem.h"
+void sd_test()
+{
+    //volatile HAL_SD_ErrorTypedef result;
+    //result = HAL_SD_Init(&hsd,&SDCardInfo);
+    //if(result==SD_OK)
+    {
+        FIL fp;
+        FRESULT ret;
+        uint32_t bytes;
+        FATFS lFatFs;
+
+        if(fs_card_detected())
+        {
+            f_open_path("");
+            ret = f_open (&fp,"ACGtest.txt", (FA_WRITE | FA_CREATE_ALWAYS) );
+            if(ret!=FR_OK)
+                nop();
+            ret = f_write (&fp, "Testing1234", 11, (uint32_t*)&bytes);
+            if(ret!=FR_OK)
+                nop();
+            ret = f_write (&fp, "AnotherTest", 11, (uint32_t*)&bytes);
+            if(ret!=FR_OK) // FR_INVALID_OBJECT is ejected, f_mount(NULL,"",0);
+                nop();
+            ret = f_close (&fp);
+            if(ret!=FR_OK)
+                nop();
+        }
+    }
+    nop();
+    return;
+}
 // eof
