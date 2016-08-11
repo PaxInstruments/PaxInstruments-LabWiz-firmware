@@ -14,12 +14,9 @@
 
 #include "labwiz/drv_serial.h"
 
-#define led1(func)          porta_8(func)
-#define bl(func)            portb_6(func)
-
 #define TOGGLE_PERIOD_MS        500
 
-char m_scratch[100];
+static char m_scratch[100];
 
 void TestTaskFunction( void *pvParameters )
 {
@@ -31,7 +28,7 @@ void TestTaskFunction( void *pvParameters )
         vTaskDelay(portTICK_PERIOD_MS*TOGGLE_PERIOD_MS);
 
         // Togle LED and send string
-        led1(toggle());
+        //led1(toggle());
 
         bytes = drv_uart1_rx(NULL, 100);
         if(bytes>0)

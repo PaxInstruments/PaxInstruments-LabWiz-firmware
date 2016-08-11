@@ -104,6 +104,7 @@ void labwiz_task_init()
 
     // configMINIMAL_STACK_SIZE = 128 = 512 bytes
     // if we have 3k of stack, this is 6 tasks!
+#if 0
     result = xTaskCreate( TestTaskFunction,
               "TestTask",
               configMINIMAL_STACK_SIZE,
@@ -114,6 +115,8 @@ void labwiz_task_init()
     // DEBUG
     if(result!=pdPASS)
         while(DEBUG) nop();
+#endif
+
     result = xTaskCreate( drv_uart_task,
             "UARTTask",
             configMINIMAL_STACK_SIZE,

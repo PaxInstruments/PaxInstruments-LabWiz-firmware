@@ -171,13 +171,15 @@ void lcd_init()
     lcd_line(0, 66, 63, 66);
     #endif
 
+    #if 0
     lcd_print("!\"#$%&'()*+,-./0123456",0,0);
     lcd_print("789:;<=>?@ABCDEFGHIJKL",9,0);
     lcd_print("MNOPQRSTUVWXYZ[\]^_`ab",18,0);
     lcd_print("cdefghijklmnopqrstuvwx",27,0);
     lcd_print("yz{|}~~",37,0);
+    #endif
 
-    _lcd_draw();
+    //_lcd_draw();
 
     nop();
 

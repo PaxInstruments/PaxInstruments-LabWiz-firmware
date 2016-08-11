@@ -280,6 +280,8 @@ static void MX_SPI1_Init(void)
 static void MX_SPI3_Init(void)
 {
 
+    // The Fpclk is at 36MHz
+
   hspi3.Instance = SPI3;
   hspi3.Init.Mode = SPI_MODE_MASTER;
   hspi3.Init.Direction = SPI_DIRECTION_1LINE;
@@ -287,7 +289,17 @@ static void MX_SPI3_Init(void)
   hspi3.Init.CLKPolarity = SPI_POLARITY_HIGH;
   hspi3.Init.CLKPhase = SPI_PHASE_2EDGE;
   hspi3.Init.NSS = SPI_NSS_HARD_OUTPUT;
-  hspi3.Init.BaudRatePrescaler = SPI_BAUDRATEPRESCALER_256;
+
+  // 36MHz/2 = 18MHz
+  // 36MHz/4 = 9MHz
+  // 36MHz/8 = 4.5MHz
+  // 36MHz/16 = 2.25MHz
+  // 36MHz/32 = 1.125MHz
+  // 36MHz/64 = 562.5KHz
+  // 36MHz/128 = 281.25KHz
+  // 36MHz/256 = 140.625KHz
+
+  hspi3.Init.BaudRatePrescaler = SPI_BAUDRATEPRESCALER_32;
   hspi3.Init.FirstBit = SPI_FIRSTBIT_MSB;
   hspi3.Init.TIMode = SPI_TIMODE_DISABLE;
   hspi3.Init.CRCCalculation = SPI_CRCCALCULATION_DISABLE;
