@@ -17,8 +17,8 @@
 
 // Definitions and types
 // ----------------------------------------------------------------------------
-#define STATE_INIT      0
-#define STATE_OPERATING 1
+#define STATE_INIT              0
+#define STATE_OPERATING         1
 
 #define PERIODIC_PERIOD_MS      250
 
@@ -54,6 +54,8 @@ int16_t m_maxTempInt;
 
 uint8_t m_temperatureUnit = TEMPERATURE_UNITS_C;
 
+bool m_logging=false;
+
 int m_current_channel = SENSOR_COUNT;
 
 lcd_screen_t lcd_screen1;
@@ -70,6 +72,8 @@ void _t1000_fake_data(void);
 uint8_t _t1000_numlength(int16_t num);
 char * _t1000_printtemp(char * buf, int16_t temp);
 char _t1000_current_unit(void);
+void _t1000_record_start(void);
+void _t1000_record_stop(void);
 
 // Public functions
 // ----------------------------------------------------------------------------
@@ -253,6 +257,10 @@ void loop()
         {
             if(m_button_mask&SW_MASK(SW_A))
             {
+                if(m_logging)
+                    _t1000_record_stop();
+                else
+                    _t1000_record_start();
                 m_button_mask&=~SW_MASK(SW_A);
             }
             if(m_button_mask&SW_MASK(SW_B))
@@ -469,5 +477,116 @@ char _t1000_current_unit()
     case TEMPERATURE_UNITS_K: return 'K';
     }
     return 'C';
+}
+
+#include "ff.h"
+FIL * m_log_file = NULL;
+void _t1000_record_start()
+{
+    char fileName[12];
+    uint16_t i = 0;
+
+    // Make sure we are in a known state
+    if(m_logging)
+        _t1000_record_stop();
+
+      //Start logging
+#if 0
+      // Create LDxxxx.CSV for the lowest value of x.
+      // Jump by 100 here
+      do{
+          i+=100;
+          sprintf(fileName,"LD%04d.CSV",i);
+      }while(sd.exists(fileName));
+      // We now know that value doesn't exist, go back 100 and search from here
+      i-=100;
+      do{
+          i+=10;
+          sprintf(fileName,"LD%04d.CSV",i);
+          // This could take a while, so reset the watchdog here
+          wdt_reset();
+      }while(sd.exists(fileName));
+      // We now know that value doesn't exist, go back 10 and search from here
+      i-=10;
+      do{
+          i+=1;
+          sprintf(fileName,"LD%04d.CSV",i);
+      }while(sd.exists(fileName));
+
+      if(!file.open(fileName, O_CREAT | O_WRITE | O_EXCL))
+      {
+        return false;
+      }
+      file.clearWriteError();
+
+      // write data header
+      file.print("time (s)");
+
+      #endif
+      #if SERIAL_OUTPUT_ENABLED
+      Serial.print("v");
+      Serial.println(FIRMWARE_VERSION);
+
+      Serial.print("File: ");
+      Serial.println(fileName);
+      Serial.print("time (s)");
+
+
+      for (uint8_t i = 0; i < SENSOR_COUNT; i++) {
+        #if SD_LOGGING_ENABLED
+        file.print(", temp_");
+        file.print(i, DEC);
+        #endif
+        #if SERIAL_OUTPUT_ENABLED
+        Serial.print(", temp_");
+        Serial.print(i, DEC);
+        #endif
+
+        switch(temperatureUnit) {
+        case TEMPERATURE_UNITS_C:
+          #if SD_LOGGING_ENABLED
+          file.print(" (C)");
+          #endif
+          #if SERIAL_OUTPUT_ENABLED
+          Serial.print(" (C)");
+          #endif
+          break;
+        case TEMPERATURE_UNITS_F:
+          #if SD_LOGGING_ENABLED
+          file.print(" (F)");
+          #endif
+          #if SERIAL_OUTPUT_ENABLED
+          Serial.print(" (F)");
+          #endif
+          break;
+        case TEMPERATURE_UNITS_K:
+          #if SD_LOGGING_ENABLED
+          file.print(" (K)");
+          #endif
+          #if SERIAL_OUTPUT_ENABLED
+          Serial.print(" (K)");
+          #endif
+          break;
+        }
+      }
+      #if SD_LOGGING_ENABLED
+      file.println();
+      file.flush();
+      #endif
+      #if SERIAL_OUTPUT_ENABLED
+      Serial.println();
+      #endif
+
+      return (file.getWriteError() == false);
+
+#endif
+    return;
+}
+void _t1000_record_stop()
+{
+    //FRESULT f_open (FIL* fp, const TCHAR* path, BYTE mode);             /* Open or create a file */
+    // Close file
+    m_logging = false;
+    return;
 }
 // eof
