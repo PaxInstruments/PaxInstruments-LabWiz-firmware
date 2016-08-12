@@ -200,7 +200,7 @@ void lcd_task( void *pvParameters )
         lcd_max_stack_depth = uxTaskGetStackHighWaterMark( NULL);
 
         // DEBUG, run every XXXms (slow for testing)
-        vTaskDelay(portTICK_PERIOD_MS*1000);
+        vTaskDelay(portTICK_PERIOD_MS*100);
         //pin_bl(toggle());
         #ifndef LCD_DOUBLE_BUFFER
         _lcd_draw();
@@ -288,7 +288,7 @@ void lcd_print(char * st,uint8_t row,uint8_t col)
         // Draw X bits in this row
         page = (row>>3);
         bits = row%8; // We can write this many bits in the current row
-        if(bits>0 && page<(LCD_PAGES-1))
+        if(bits>0 && page<(LCD_PAGES))
         {
             for(x=0;x<CHAR_WIDTH;x++)
             {

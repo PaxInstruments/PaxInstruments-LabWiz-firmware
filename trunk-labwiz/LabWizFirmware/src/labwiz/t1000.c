@@ -20,7 +20,7 @@
 #define STATE_INIT      0
 #define STATE_OPERATING 1
 
-#define PERIODIC_PERIOD_MS      1000
+#define PERIODIC_PERIOD_MS      250
 
 #define SENSOR_COUNT            4
 #define MAXIMUM_GRAPH_POINTS    100
@@ -54,6 +54,8 @@ int16_t m_maxTempInt;
 
 uint8_t m_temperatureUnit = TEMPERATURE_UNITS_C;
 
+int m_current_channel = SENSOR_COUNT;
+
 lcd_screen_t lcd_screen1;
 
 static char m_scratch[100];
@@ -64,13 +66,17 @@ void _t1000_btn_press(uint8_t button);
 void _t1000_updateGraphScaling(void);
 int16_t _t1000_convertTemperatureInt(int16_t celcius);
 uint8_t _t1000_temperature_to_pixel(int16_t temp);
+void _t1000_fake_data(void);
+uint8_t _t1000_numlength(int16_t num);
+char * _t1000_printtemp(char * buf, int16_t temp);
+char _t1000_current_unit(void);
 
 // Public functions
 // ----------------------------------------------------------------------------
 
 void setup()
 {
-    int8_t x;
+    int8_t x,y;
     lcd_blank();
     // Top Row section
     lcd_line(8,0, 8, MAX_COL);
@@ -82,8 +88,8 @@ void setup()
     // Side bar
     lcd_line(19, 18,MAX_ROW,18);
     // Tick marks
-    for(x=0;x<5;x++)
-        lcd_set_pixel((uint8_t)((x*9)+19),17);
+    for(x=1;x<5;x++)
+        lcd_set_pixel((uint8_t)((x*10)+15),17);
 
     // Test
 #if 0
@@ -97,6 +103,15 @@ void setup()
 
     lcd_blank();
     labwiz_set_btn_callback(_t1000_btn_press);
+
+
+    for(uint8_t x = 0; x < SENSOR_COUNT; x++)
+    {
+     for(uint8_t y=0; y < MAXIMUM_GRAPH_POINTS; y++)
+     {
+         m_graphdata[x][y] = OUT_OF_RANGE_INT;
+     }
+    }
 
     lcd_print("Pax Instruments t1000",30,3);
 
@@ -134,6 +149,13 @@ void loop()
             // Draw our datapoints
             // We have an area from 19----->130 and 19 ^---v 63 (111 x 44)
 
+            // Draw status
+            lcd_print("K",10,0); // Thermocouple type
+            lcd_print("B",10,127); // Battery
+            sprintf(m_scratch,"`%c",_t1000_current_unit());
+            lcd_print(m_scratch,10,20);
+            lcd_print("Log Off",10,50);
+
             // Increment the current graph point (it wraps around)
             if(m_graphdata_index == 0)
             {
@@ -146,21 +168,29 @@ void loop()
                 m_graphdata_count++;
             }
 
+            #if 0
             // TODO: Save REAL values into m_graphdata[channel][m_graphdata_index]
-            for(x=0;x<SENSOR_COUNT;x++)
-                m_graphdata[x][m_graphdata_index] = 234;
-
-            // TODO: Write the values to the top bar
-            sprintf(m_scratch," %d",m_graphdata[0][m_graphdata_index]);
-            lcd_print(m_scratch,0,(0*33)+2);
-            sprintf(m_scratch," %d",m_graphdata[1][m_graphdata_index]);
-            lcd_print(m_scratch,0,(1*33)+2);
-            sprintf(m_scratch," %d",m_graphdata[2][m_graphdata_index]);
-            lcd_print(m_scratch,0,(2*33)+2);
-            sprintf(m_scratch," %d",m_graphdata[3][m_graphdata_index]);
-            lcd_print(m_scratch,0,(3*33)+2);
+            #else
+            _t1000_fake_data();
+            #endif
 
             _t1000_updateGraphScaling();
+
+            // Draw axis labels and marks
+            for(uint8_t interval = 1; interval < 5; interval++)
+            {
+                uint8_t spaces=0,x;
+                int16_t tmp16;
+                tmp16 = (m_minTempInt/10) + (m_graphScale*interval);
+                // TODO: Write a space string, then over write with number, drrr
+                // Add spaces for right justified
+                spaces = m_axisDigits-_t1000_numlength(tmp16);
+                if(spaces>3) spaces=3;
+                for(x=0;x<spaces;x++)
+                    sprintf(&(m_scratch[x])," ");
+                sprintf(&(m_scratch[spaces]), "%d", tmp16);
+                lcd_print(m_scratch, 63 - interval*10, 0);
+            }
 
             // Calculate how many graph points to display.
             // If the number of axis digits is >2, scale back how many
@@ -169,7 +199,6 @@ void loop()
             x = MAXIMUM_GRAPH_POINTS - ((m_axisDigits - 2)*5);
             if(x<num_points) num_points = x;
 
-#if 1
             // Draw the temperature graph for each sensor
             for(uint8_t channel = 0; channel< SENSOR_COUNT; channel++)
             {
@@ -178,11 +207,16 @@ void loop()
 
                 // if the sensor is out of range, don't show it. If we are showing one
                 // channel, ignore the others
-                //if(m_graphdata[sensor][graphCurrentPoint] == OUT_OF_RANGE_INT || (sensor != graphChannel && graphChannel < 4) )
-                if(m_graphdata[channel][m_graphdata_index] == OUT_OF_RANGE_INT)
+                if(m_graphdata[channel][m_graphdata_index] == OUT_OF_RANGE_INT ||
+                    (channel != m_current_channel && m_current_channel < 4) )
+                {
                   continue;
+                }
 
                 tmp16 = _t1000_convertTemperatureInt(m_graphdata[channel][m_graphdata_index]);
+
+                _t1000_printtemp(m_scratch, tmp16);
+                lcd_print(m_scratch,0,(channel*33)+2);
 
                 // Get the position of the latest point
                 //p = temperature_to_pixel(graph[sensor][graphCurrentPoint]);
@@ -190,7 +224,7 @@ void loop()
 
                 // Draw the channel number at the latest point
                 sprintf(m_scratch,"%d",channel+1);
-                lcd_print(m_scratch,(uint8_t)(3+p),(uint8_t)(112+5*channel));
+                lcd_print(m_scratch,(uint8_t)(p-3),(uint8_t)(112+5*channel));
 
                 // Now, draw all the points
                 index = m_graphdata_index;
@@ -211,7 +245,6 @@ void loop()
                 #endif
 
             }// end for sensor
-#endif
 
         }
 
@@ -228,10 +261,17 @@ void loop()
             }
             if(m_button_mask&SW_MASK(SW_C))
             {
+                if(m_temperatureUnit==TEMPERATURE_UNITS_K)
+                    m_temperatureUnit=TEMPERATURE_UNITS_C;
+                else
+                    m_temperatureUnit++;
                 m_button_mask&=~SW_MASK(SW_C);
             }
             if(m_button_mask&SW_MASK(SW_D))
             {
+                m_current_channel++;
+                if(m_current_channel>SENSOR_COUNT)
+                    m_current_channel=0;
                 m_button_mask&=~SW_MASK(SW_D);
             }
             if(m_button_mask&SW_MASK(SW_E))
@@ -351,5 +391,83 @@ uint8_t _t1000_temperature_to_pixel(int16_t temp)
     p = (uint16_t)(60-p);
     return (uint8_t)p;
 }
+void _t1000_fake_data()
+{
+    // DEBUG: Fake some data
+    m_graphdata[0][m_graphdata_index] = OUT_OF_RANGE_INT;
+    m_graphdata[1][m_graphdata_index] = OUT_OF_RANGE_INT;
+    m_graphdata[2][m_graphdata_index] = OUT_OF_RANGE_INT;
+    m_graphdata[3][m_graphdata_index] = OUT_OF_RANGE_INT;
+    #if 0
+    // EXTREME!
+    m_graphdata[0][m_graphdata_index] = 30000; // 3270.9 C
+    m_graphdata[1][m_graphdata_index] = -2732; // -273.2C (abs zero)
+    m_graphdata[2][m_graphdata_index] = OUT_OF_RANGE_INT;
+    m_graphdata[3][m_graphdata_index] = OUT_OF_RANGE_INT;
+    #endif
+    #if 0
+    m_graphdata[0][m_graphdata_index] = 1234;
+    m_graphdata[1][m_graphdata_index] = -345;
+    m_graphdata[2][m_graphdata_index] = OUT_OF_RANGE_INT;
+    m_graphdata[3][m_graphdata_index] = OUT_OF_RANGE_INT;
+    #endif
+    #if 0
+    #define OFFSET  30.0
+    #define SCALE   10.0
+    #define ADD     0.05
+    static double val=0.0;
+    double tmpdbl;
+    tmpdbl = ((SCALE*sin(val))+OFFSET)*10;
+    m_graphdata[0][m_graphdata_index] = (int16_t)tmpdbl;
+    m_graphdata[2][m_graphdata_index] = (int16_t)tmpdbl+5.0;
+    val += ADD;
+    #endif
 
+    #if 1
+    static int16_t val=300;
+    static int16_t step=5;
+    m_graphdata[0][m_graphdata_index] = val;
+    m_graphdata[1][m_graphdata_index] = val+50;
+    m_graphdata[2][m_graphdata_index] = val+100;
+    m_graphdata[3][m_graphdata_index] = val+150;
+    val+=step;
+    if(val>=400 || val<= 200) step=step*-1;
+    #endif
+
+#if 0
+    temperatures_int[0] = convertTemperatureInt(temperatures_int[0]);
+    temperatures_int[1] = convertTemperatureInt(temperatures_int[1]);
+    temperatures_int[2] = convertTemperatureInt(temperatures_int[2]);
+    temperatures_int[3] = convertTemperatureInt(temperatures_int[3]);
+#endif
+
+
+    return;
+}
+uint8_t _t1000_numlength(int16_t num)
+{
+    if(num>999 || num<-99) return 4;
+    if(num>99 || num<-9) return 3;
+    if(num>9 || num<0) return 2;
+    return 1;
+}
+
+char * _t1000_printtemp(char * buf, int16_t temp)
+{
+    uint8_t tmp8;
+    tmp8 = (uint8_t)abs(temp%10);
+    if(temp>9999)
+        sprintf(buf,"%d.%d",((temp)/10),tmp8);
+    else
+        sprintf(buf,"%3d.%d",((temp)/10),tmp8);
+    return buf;
+}
+char _t1000_current_unit()
+{
+    switch(m_temperatureUnit){
+    case TEMPERATURE_UNITS_F: return 'F';
+    case TEMPERATURE_UNITS_K: return 'K';
+    }
+    return 'C';
+}
 // eof
