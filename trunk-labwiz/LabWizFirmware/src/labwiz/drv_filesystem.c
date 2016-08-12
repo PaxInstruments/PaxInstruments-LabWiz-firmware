@@ -57,6 +57,15 @@ bool fs_card_detected()
 {
     return (fs_open_path("")==FR_OK);
 }
+
+bool fs_exists(char *filename)
+{
+    FIL fp;
+    FRESULT result;
+    result = f_open(&fp, filename, FA_READ);
+    f_close(&fp);
+    return (result==FR_OK);
+}
 // Private functions
 // ----------------------------------------------------------------------------
 

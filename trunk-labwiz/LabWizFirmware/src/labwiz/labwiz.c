@@ -79,6 +79,7 @@ void labwiz_init()
     /* init code for FATFS */
     MX_FATFS_Init();
 
+
     // Enable the External interrupts 10-15 global interrupt
     HAL_NVIC_SetPriority(EXTI15_10_IRQn, 8, 0);
     HAL_NVIC_EnableIRQ(EXTI15_10_IRQn);
