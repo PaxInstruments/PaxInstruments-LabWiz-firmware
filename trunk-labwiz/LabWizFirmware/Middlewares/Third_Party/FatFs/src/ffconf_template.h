@@ -9,18 +9,20 @@
 / Additional user header to be used  
 /-----------------------------------------------------------------------------*/
 /* Replace 'stm32xxx' with the STM32 Serie used, ex: stm32f4xx_hal.h */
-#include "stm32xxx_hal.h" 
+#include "stm32f1xx_hal.h"
 
 /* If uSD is used, then include the uSD BSP header file. 
    Replace 'stm32xxx' with your EVAL board name, ex: stm324x9i_eval_sd.h 
    */
-#include "stm32xxx_eval_sd.h"
+//#include "stm32xxx_eval_sd.h"
+#include "bsp_driver_sd.h"
+
 
 /* If USB Host MSC is used, then need to include the USBH and UBSH MSC core header files */
-#include "usbh_core.h"
-#include "usbh_msc.h"
+//#include "usbh_core.h"
+//#include "usbh_msc.h"
 /* hUSBH to be updated with the USBH handle defined in the application code */
-#define  HOST_HANDLE   hUSBH 
+//#define  HOST_HANDLE   hUSBH
 
 /*---------------------------------------------------------------------------/
 / Functions and Buffer Configurations
@@ -65,7 +67,7 @@
 /  f_findfirst() and f_findnext(). (0:Disable or 1:Enable) */
 
 
-#define	_USE_MKFS               1
+#define	_USE_MKFS               0
 /* This option switches f_mkfs() function. (0:Disable or 1:Enable) */
 
 

@@ -30,7 +30,6 @@
   *
   ******************************************************************************
   */
-#define BUS_4BITS 1
 /* USER CODE BEGIN 0 */
 /* Includes ------------------------------------------------------------------*/
 #include "bsp_driver_sd.h"
@@ -113,7 +112,9 @@ __weak void BSP_SD_DetectCallback(void)
 uint8_t BSP_SD_ReadBlocks(uint32_t *pData, uint64_t ReadAddr, uint32_t BlockSize, uint32_t NumOfBlocks)
 {
   uint8_t sd_state;
-  if(HAL_SD_ReadBlocks(&hsd, pData, ReadAddr, BlockSize, NumOfBlocks) != SD_OK)
+  HAL_SD_ErrorTypedef ret;
+  ret = HAL_SD_ReadBlocks(&hsd, pData, ReadAddr, BlockSize, NumOfBlocks);
+  if(ret != SD_OK)
   {
     sd_state = MSD_ERROR;
   }

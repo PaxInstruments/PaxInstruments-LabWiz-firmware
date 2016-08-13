@@ -29,6 +29,8 @@
 void setup(void);
 void loop(void);
 
+#define led1(func)          porta_8(func)
+
 #endif // End include guard
 
 // eof

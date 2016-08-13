@@ -25,12 +25,6 @@
 
 // Definitions and externs
 // ---------------------------------------------------------------------------
-// The LCD is a 132x64 pixel graphical LCD.  If split into 8 bit 'pages' then
-// it is 133 x 8pages
-#define LCD_COLS            132
-#define LCD_ROWS            64
-#define LCD_ROWS_PER_PAGE   8
-#define LCD_PAGES           (LCD_ROWS/LCD_ROWS_PER_PAGE)    // 8
 
 // The data/cmd GPIO
 #define pin_data_cmd(func)  portb_9(func)
@@ -144,6 +138,7 @@ uint8_t m_lcd_buffer[2][LCD_PAGES][LCD_COLS];
 void _lcd_setup(void);
 void _lcd_draw(void);
 void _lcdDEBUG_test_pattern1(void);
+void lcd_print_test();
 
 // Public functions
 // ---------------------------------------------------------------------------
@@ -163,7 +158,7 @@ void lcd_init()
 
 
     // DEBUG tests
-    #if 1
+    #if 0
     lcd_set_pixel(0,0);
     lcd_set_pixel(0,131);
     lcd_set_pixel(63,131);
@@ -171,12 +166,20 @@ void lcd_init()
     lcd_set_pixel(32,66);
     #endif
 
-    #if 1
+    #if 0
     lcd_line(32, 0, 32, 131);
     lcd_line(0, 66, 63, 66);
     #endif
 
-    _lcd_draw();
+    #if 0
+    lcd_print("!\"#$%&'()*+,-./0123456",0,0);
+    lcd_print("789:;<=>?@ABCDEFGHIJKL",9,0);
+    lcd_print("MNOPQRSTUVWXYZ[\]^_`ab",18,0);
+    lcd_print("cdefghijklmnopqrstuvwx",27,0);
+    lcd_print("yz{|}~~",37,0);
+    #endif
+
+    //_lcd_draw();
 
     nop();
 
@@ -197,7 +200,7 @@ void lcd_task( void *pvParameters )
         lcd_max_stack_depth = uxTaskGetStackHighWaterMark( NULL);
 
         // DEBUG, run every XXXms (slow for testing)
-        vTaskDelay(portTICK_PERIOD_MS*1000);
+        vTaskDelay(portTICK_PERIOD_MS*100);
         //pin_bl(toggle());
         #ifndef LCD_DOUBLE_BUFFER
         _lcd_draw();
@@ -260,28 +263,37 @@ void lcd_clear_pixel(uint8_t row, uint8_t col)
 
 // This is kinda ugly, is there a better way to write text across pages?
 // TODO: Improve
+#if 1
+#define CHAR_WIDTH  5
+#define CHAR_HEIGHT 8
+#define FONT        Font5x7
+#else
+#define CHAR_WIDTH  4
+#define CHAR_HEIGHT 7
+#define FONT        fonttest
+#endif
 void lcd_print(char * st,uint8_t row,uint8_t col)
 {
     char c;
     uint8_t * ptr;
-    uint8_t page,bits,x,data,pos,cnt,src;
+    uint8_t page,bits,x,data,olddata,pos,cnt,src;
     if(row>LCD_ROWS || col>130) return;
-    row+=8;
+    row+=CHAR_HEIGHT;
     while(*st)
     {
         c = *st;
         pos = col;
-        ptr=&(Font5x7[(c-' ')*5]);
+        ptr=&(FONT[(c-' ')*CHAR_WIDTH]);
 
         // Draw X bits in this row
         page = (row>>3);
-        bits = row%8;
-        if(bits>0 && page<(LCD_PAGES-1))
+        bits = row%8; // We can write this many bits in the current row
+        if(bits>0 && page<(LCD_PAGES))
         {
-            for(x=0;x<5;x++)
+            for(x=0;x<CHAR_WIDTH;x++)
             {
                 data = *ptr;
-                data = data>>(8-bits);
+                data = data>>(CHAR_HEIGHT-bits);
                 // Flip font vvvvvvvvvvv
                 src = 0;
                 for(cnt=0;cnt<8;cnt++){ src<<=1; src|=(data&1); data>>=1;}
@@ -290,19 +302,19 @@ void lcd_print(char * st,uint8_t row,uint8_t col)
                 ptr++;
             }
         }
-        // If we displayed less than the full 8 bits, then we have 8-bits left
+        // If we displayed less than the full HEIGHT bits, then we have 8-bits left
         // to draw on the next page
         if(bits<8 && page>0)
         {
-            // 8-bits remain in the lower page
-            bits = 8-bits;
+            // HEIGHT-bits remain in the lower page
+            bits = CHAR_HEIGHT-bits; // We have this many bits to go
             pos = col;
             page--;
-            ptr=&(Font5x7[(c-' ')*5]);
-            for(x=0;x<5;x++)
+            ptr=&(FONT[(c-' ')*CHAR_WIDTH]);
+            for(x=0;x<CHAR_WIDTH;x++)
             {
                 data = *ptr;
-                data = data<<(8-bits);
+                data = data<<(CHAR_HEIGHT-bits);
                 // Flip font vvvvvvvvvvv
                 src = 0;
                 for(cnt=0;cnt<8;cnt++){ src<<=1; src|=(data&1); data>>=1;}
@@ -311,7 +323,6 @@ void lcd_print(char * st,uint8_t row,uint8_t col)
                 ptr++;
             }
         }
-
         st++;
         col+=6;
     };
@@ -352,6 +363,20 @@ void lcd_backlight_enable(bool enable)
     else
         pin_bl(clear());
 }
+
+void lcd_get_screen(lcd_screen_t * screen)
+{
+    if(screen==NULL) return;
+    memcpy(screen,m_lcd_buffer,sizeof(m_lcd_buffer));
+    return;
+}
+void lcd_set_screen(lcd_screen_t * screen)
+{
+    if(screen==NULL) return;
+    memcpy(m_lcd_buffer,screen,sizeof(m_lcd_buffer));
+    return;
+}
+
 // Private functions
 // ---------------------------------------------------------------------------
 
@@ -457,5 +482,11 @@ void _lcdDEBUG_test_pattern1()
     }
     return;
 }
-
+void lcd_print_test()
+{
+    uint8_t * ptr;
+    ptr = &(m_lcd_buffer[0][0]);
+    memcpy(ptr,fonttest,30);
+    return;
+}
 // eof
