@@ -20,7 +20,7 @@
 #define STATE_INIT              0
 #define STATE_OPERATING         1
 
-#define PERIODIC_PERIOD_MS      250
+#define PERIODIC_PERIOD_MS      500
 
 #define SENSOR_COUNT            4
 #define MAXIMUM_GRAPH_POINTS    100
@@ -60,7 +60,10 @@ int m_current_channel = SENSOR_COUNT;
 
 lcd_screen_t lcd_screen1;
 
-static char m_scratch[100];
+uint32_t m_timecount=0;
+uint32_t m_elapsedtime=0;
+
+static char m_scratch[200];
 
 // Local prototypes
 // ----------------------------------------------------------------------------
@@ -74,6 +77,8 @@ char * _t1000_printtemp(char * buf, int16_t temp);
 char _t1000_current_unit(void);
 bool _t1000_record_start(void);
 void _t1000_record_stop(void);
+void _t1000_write_header(void);
+void _t1000_write_log(void);
 
 // Public functions
 // ----------------------------------------------------------------------------
@@ -117,6 +122,8 @@ void setup()
      }
     }
 
+    m_logging = false;
+
     lcd_print("Pax Instruments t1000",30,3);
 
     return;
@@ -143,6 +150,9 @@ void loop()
         {
             int num_points,x;
 
+            m_timecount++;
+            m_elapsedtime = (m_timecount*PERIODIC_PERIOD_MS)/1000; // This gets us seconds
+
             m_last_tick = current_tick;
             led1(toggle());
 
@@ -158,7 +168,10 @@ void loop()
             lcd_print("B",10,127); // Battery
             sprintf(m_scratch,"`%c",_t1000_current_unit());
             lcd_print(m_scratch,10,20);
-            lcd_print("Log Off",10,50);
+            if(!m_logging)
+                lcd_print("Log Off",10,50);
+            else
+                lcd_print("Logging",10,50);
 
             // Increment the current graph point (it wraps around)
             if(m_graphdata_index == 0)
@@ -250,7 +263,9 @@ void loop()
 
             }// end for sensor
 
-        }
+            _t1000_write_log();
+
+        } // End period_ms
 
         // Detect button pushes
         if(m_button_mask!=0)
@@ -265,6 +280,10 @@ void loop()
             }
             if(m_button_mask&SW_MASK(SW_B))
             {
+                // This is for changing sample timing
+
+                // Use it for logging
+                _t1000_write_log();
                 m_button_mask&=~SW_MASK(SW_B);
             }
             if(m_button_mask&SW_MASK(SW_C))
@@ -488,11 +507,15 @@ bool _t1000_record_start()
     char fileName[12];
     uint16_t i = 0,limit=100;
     uint32_t x,written;
-#if 0
+
     // Make sure we are in a known state
     if(m_logging)
         _t1000_record_stop();
 
+    // TODO: Issues with FatFs, disabled all f_xxx calls
+    // until issue is resolved
+
+#if 0
     // Open root
     if(!fs_open_path(""))
         nop();
@@ -531,30 +554,81 @@ bool _t1000_record_start()
     {
       return false;
     }
+    m_logging = true;
+
     //file.clearWriteError();
+    _t1000_write_header();
 
-    // write data header
-    x=sprintf(m_scratch,"time (s)");
-    f_write(&m_log_file,m_scratch,x,&written);
-
-    for (x = 0; x < SENSOR_COUNT; x++)
-    {
-      x=sprintf(m_scratch,", temp_%d (%c)",x,_t1000_current_unit());
-      f_write(&m_log_file,m_scratch,x,&written);
-    }
-
-    f_write(&m_log_file,"\n",1,&written);
     f_sync(&m_log_file);
 
     return true; //(file.getWriteError() == false);
+#else
+    m_logging = true;
+    _t1000_write_header();
+    return true; //(file.getWriteError() == false);
 #endif
-
 }
 void _t1000_record_stop()
 {
+#if 0
     // Close file
     f_close(&m_log_file);
+#endif
     m_logging = false;
+    return;
+}
+
+void _t1000_write_header()
+{
+    int x,len;
+    uint8_t result;
+
+    len = 0;
+    len += sprintf(&(m_scratch[len]),"v%s\n",FIRMWARE_VERSION);
+    len += sprintf(&(m_scratch[len]),"File: %s\n","file.csv");
+    len += sprintf(&(m_scratch[len]),"time (s)");
+    for(x=0;x<SENSOR_COUNT;x++)
+    {
+        len += sprintf(&(m_scratch[len]),", temp_%d (%c)",x,_t1000_current_unit());
+    }
+    len += sprintf(&(m_scratch[len]),"\n");
+
+    #if ENABLE_SERIAL_LOGGING
+    result = CDC_Transmit_FS(m_scratch,len);
+    nop();
+    #endif
+
+    #if ENABLE_SD_CARD_LOGGING
+    // TODO: Add this once we figure out what is going on with the hard fault
+    nop();
+    #endif
+
+    return;
+}
+void _t1000_write_log()
+{
+    volatile uint8_t result;
+    int x,len;
+
+    if(m_logging==false) return;
+
+    #if ENABLE_SERIAL_LOGGING
+    len = 0;
+    len += sprintf(&(m_scratch[len]),"%d,",m_elapsedtime);
+    for(x=0;x<SENSOR_COUNT;x++)
+    {
+        len += sprintf(&(m_scratch[len]),"%d,",m_graphdata[x][m_graphdata_index]);
+    }
+    sprintf(&(m_scratch[len-1]),"\n");
+    result = CDC_Transmit_FS(m_scratch,len);
+    nop();
+    #endif
+
+    #if ENABLE_SD_CARD_LOGGING
+    // TODO: Add this once we figure out what is going on with the hard fault
+    nop();
+    #endif
+
     return;
 }
 // eof
