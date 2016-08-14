@@ -40,6 +40,8 @@
 #define SW_E_EXTI_MASK      (1<<(SW_E_EXTI))
 #define SW_PWR_EXTI_MASK    (1<<(SW_PWR_EXTI))
 
+extern RTC_HandleTypeDef hrtc;
+
 // Local variables
 // ----------------------------------------------------------------------------
 EXTI_TypeDef * m_exti_struct = ((EXTI_TypeDef *) EXTI_BASE);
@@ -79,6 +81,12 @@ void labwiz_init()
     /* init code for FATFS */
     MX_FATFS_Init();
 
+    // Setup RTC
+    // RTC clock is 40KHz.  WE could provide the prescale
+    // but the HAL module auto-calculates it
+    if(HAL_RTC_Init(&hrtc)!=HAL_OK)
+        while(DEBUG) nop();
+
 
     // Enable the External interrupts 10-15 global interrupt
     HAL_NVIC_SetPriority(EXTI15_10_IRQn, 8, 0);
@@ -106,6 +114,7 @@ void labwiz_task_init()
     // configMINIMAL_STACK_SIZE = 128 = 512 bytes
     // if we have 3k of stack, this is 6 tasks!
 #if 0
+    // TODO: provide time functions for 1 sec, 1 min, etc.
     result = xTaskCreate( TestTaskFunction,
               "TestTask",
               configMINIMAL_STACK_SIZE,
