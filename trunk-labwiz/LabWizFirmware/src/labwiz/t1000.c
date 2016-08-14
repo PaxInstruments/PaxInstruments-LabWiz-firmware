@@ -619,6 +619,19 @@ void _t1000_write_log()
     {
         len += sprintf(&(m_scratch[len]),"%d,",m_graphdata[x][m_graphdata_index]);
     }
+
+#if 1
+    {
+        extern RTC_HandleTypeDef hrtc;
+        HAL_StatusTypeDef ret;
+        RTC_TimeTypeDef tm;
+        ret = HAL_RTC_GetTime(&hrtc, &tm, RTC_FORMAT_BIN);
+        if(ret!=HAL_OK)
+            nop();
+        len += sprintf(&(m_scratch[len-1]),"%d:%d:%d",tm.Hours,tm.Minutes,tm.Seconds);
+    }
+#endif
+
     sprintf(&(m_scratch[len-1]),"\n");
     result = CDC_Transmit_FS(m_scratch,len);
     nop();
