@@ -65,6 +65,10 @@ uint32_t m_elapsedtime=0;
 
 static char m_scratch[200];
 
+FIL m_log_file_handle;
+FRESULT m_fresult;
+char fileName[12];
+
 // Local prototypes
 // ----------------------------------------------------------------------------
 void _t1000_btn_press(uint8_t button);
@@ -498,13 +502,8 @@ char _t1000_current_unit()
     return 'C';
 }
 
-#include "labwiz/drv_filesystem.h"
-FIL m_log_file;
-FATFS m_FatFs;
 bool _t1000_record_start()
 {
-    FRESULT result;
-    char fileName[12];
     uint16_t i = 0,limit=100;
     uint32_t x,written;
 
@@ -512,16 +511,11 @@ bool _t1000_record_start()
     if(m_logging)
         _t1000_record_stop();
 
-    // TODO: Issues with FatFs, disabled all f_xxx calls
-    // until issue is resolved
-
-#if 0
-    // Open root
     if(!fs_open_path(""))
         nop();
 
     //Start logging
-#if 1
+#if 0
     // Create LDxxxx.CSV for the lowest value of x.
     // Jump by 100 here
     #if 0
@@ -549,25 +543,22 @@ bool _t1000_record_start()
 #else
     sprintf(fileName,"LD0001.CSV");
 #endif
-    result=f_open(&m_log_file, fileName, (FA_WRITE|FA_CREATE_NEW));
-    if(result!=FR_OK)
+
+    //result=f_open(&m_log_file, fileName, (FA_WRITE|FA_CREATE_NEW));
+    m_fresult=f_open(&m_log_file_handle, fileName, (FA_WRITE|FA_CREATE_ALWAYS));
+    if(m_fresult!=FR_OK)
     {
       return false;
     }
     m_logging = true;
 
-    //file.clearWriteError();
     _t1000_write_header();
 
-    f_sync(&m_log_file);
+    f_sync(&m_log_file_handle);
 
-    return true; //(file.getWriteError() == false);
-#else
-    m_logging = true;
-    _t1000_write_header();
-    return true; //(file.getWriteError() == false);
-#endif
+    return true;
 }
+
 void _t1000_record_stop()
 {
 #if 0
@@ -575,6 +566,8 @@ void _t1000_record_stop()
     f_close(&m_log_file);
 #endif
     m_logging = false;
+
+    fs_close_path();
     return;
 }
 
@@ -582,6 +575,7 @@ void _t1000_write_header()
 {
     int x,len;
     uint8_t result;
+    uint32_t written;
 
     len = 0;
     len += sprintf(&(m_scratch[len]),"v%s\n",FIRMWARE_VERSION);
@@ -599,8 +593,11 @@ void _t1000_write_header()
     #endif
 
     #if ENABLE_SD_CARD_LOGGING
-    // TODO: Add this once we figure out what is going on with the hard fault
-    nop();
+    m_fresult=f_write(&m_log_file_handle, m_scratch, len, &written);
+    if(m_fresult!=FR_OK)
+    {
+      nop();
+    }
     #endif
 
     return;
@@ -609,6 +606,7 @@ void _t1000_write_log()
 {
     volatile uint8_t result;
     int x,len;
+    uint32_t written;
 
     if(m_logging==false) return;
 
@@ -638,8 +636,11 @@ void _t1000_write_log()
     #endif
 
     #if ENABLE_SD_CARD_LOGGING
-    // TODO: Add this once we figure out what is going on with the hard fault
-    nop();
+    m_fresult=f_write(&m_log_file_handle, m_scratch, len, &written);
+    if(m_fresult!=FR_OK)
+    {
+      nop();
+    }
     #endif
 
     return;

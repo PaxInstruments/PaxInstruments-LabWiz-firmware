@@ -38,7 +38,8 @@
 // Local variables
 // ----------------------------------------------------------------------------
 FATFS m_FatFs;
-
+DIR m_log_dir;
+FRESULT fret;
 // Local prototypes
 // ----------------------------------------------------------------------------
 
@@ -46,12 +47,28 @@ FATFS m_FatFs;
 // ----------------------------------------------------------------------------
 bool fs_open_path(char * path)
 {
-    FRESULT ret;
     // Mount path
-    ret = f_mount (&m_FatFs,path,0);
-    if(ret!=FR_OK)
+    fret = f_mount (&m_FatFs,path,0);
+    if(fret!=FR_OK)
+        return false;
+    fret = f_opendir(&m_log_dir,"");
+    if(fret!=FR_OK)
         return false;
     return true;
+}
+bool fs_close_path()
+{
+    bool result=true;
+
+    while(BSP_SD_GetStatus()==SD_TRANSFER_BUSY);
+
+    fret = f_closedir(&m_log_dir);
+    if(fret!=FR_OK)
+        result = false;
+    fret = f_mount(NULL,"",0);
+    if(fret!=FR_OK)
+        result = false;
+    return result;
 }
 bool fs_card_detected()
 {

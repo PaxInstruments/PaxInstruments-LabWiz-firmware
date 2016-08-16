@@ -12,6 +12,8 @@
 
 bool fs_open_path(char * path);
 
+bool fs_close_path();
+
 bool fs_card_detected(void);
 
 bool fs_exists(char *filename);

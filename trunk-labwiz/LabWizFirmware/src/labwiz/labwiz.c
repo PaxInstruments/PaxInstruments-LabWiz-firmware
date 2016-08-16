@@ -68,6 +68,7 @@ void WWDG_IRQHandler(void);
 
 void labwiz_init()
 {
+    uint8_t result;
     // All HAL init functions have been called at this point
     drv_uart_init();
     drv_esp8266_init();
@@ -77,6 +78,10 @@ void labwiz_init()
     m_exti_mask = 0;
     vSemaphoreCreateBinary(m_labwiz_isr_semaphore);
     m_btn_cb = NULL;
+
+    result = BSP_SD_Init();
+    if(result != MSD_OK)
+        nop();
 
     /* init code for FATFS */
     MX_FATFS_Init();
