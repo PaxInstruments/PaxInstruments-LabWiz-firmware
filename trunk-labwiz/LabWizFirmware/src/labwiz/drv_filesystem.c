@@ -40,11 +40,20 @@
 FATFS m_FatFs;
 DIR m_log_dir;
 FRESULT fret;
+FIL m_tmp_fp;
 // Local prototypes
 // ----------------------------------------------------------------------------
 
 // Public functions
 // ----------------------------------------------------------------------------
+bool fs_intialize_card()
+{
+    uint8_t result;
+    result = BSP_SD_Init();
+    if(result != MSD_OK)
+        return false;
+    return true;
+}
 bool fs_open_path(char * path)
 {
     // Mount path
@@ -72,16 +81,14 @@ bool fs_close_path()
 }
 bool fs_card_detected()
 {
-    return (fs_open_path("")==FR_OK);
+    return true;
 }
 
 bool fs_exists(char *filename)
 {
-    FIL fp;
-    FRESULT result;
-    result = f_open(&fp, filename, FA_READ);
-    f_close(&fp);
-    return (result==FR_OK);
+    fret = f_open(&m_tmp_fp, filename, FA_READ);
+    f_close(&m_tmp_fp);
+    return (fret==FR_OK);
 }
 // Private functions
 // ----------------------------------------------------------------------------

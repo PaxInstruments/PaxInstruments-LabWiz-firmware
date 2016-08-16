@@ -67,7 +67,7 @@ static char m_scratch[200];
 
 FIL m_log_file_handle;
 FRESULT m_fresult;
-char fileName[12];
+char m_log_fileName[15];
 
 // Local prototypes
 // ----------------------------------------------------------------------------
@@ -511,6 +511,10 @@ bool _t1000_record_start()
     if(m_logging)
         _t1000_record_stop();
 
+    // TODO: We should make sure we have a card first
+    //ret = fs_intialize_card();
+    //if(!ret) return false;
+
     if(!fs_open_path(""))
         nop();
 
@@ -541,11 +545,16 @@ bool _t1000_record_start()
         sprintf(fileName,"LD%04d.CSV",i);
     }while(fs_exists(fileName)&& i<limit);
 #else
-    sprintf(fileName,"LD0001.CSV");
+    sprintf(m_log_fileName,"LD1001.CSV");
+    {
+        bool test;
+        test=fs_exists(m_log_fileName);
+        if(test)
+            nop();
+    }
 #endif
 
-    //result=f_open(&m_log_file, fileName, (FA_WRITE|FA_CREATE_NEW));
-    m_fresult=f_open(&m_log_file_handle, fileName, (FA_WRITE|FA_CREATE_ALWAYS));
+    m_fresult=f_open(&m_log_file_handle, m_log_fileName, (FA_WRITE|FA_CREATE_NEW));
     if(m_fresult!=FR_OK)
     {
       return false;
@@ -579,7 +588,7 @@ void _t1000_write_header()
 
     len = 0;
     len += sprintf(&(m_scratch[len]),"v%s\n",FIRMWARE_VERSION);
-    len += sprintf(&(m_scratch[len]),"File: %s\n","file.csv");
+    len += sprintf(&(m_scratch[len]),"File: %s\n",m_log_fileName);
     len += sprintf(&(m_scratch[len]),"time (s)");
     for(x=0;x<SENSOR_COUNT;x++)
     {
@@ -641,6 +650,9 @@ void _t1000_write_log()
     {
       nop();
     }
+    // NOTE: This sync should be done at some other interval, not the
+    // main sampling interval, but for now just do it
+    f_sync(&m_log_file_handle);
     #endif
 
     return;

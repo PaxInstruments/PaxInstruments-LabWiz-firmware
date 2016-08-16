@@ -10,6 +10,8 @@
 
 #include "ff.h"
 
+bool fs_intialize_card();
+
 bool fs_open_path(char * path);
 
 bool fs_close_path();
