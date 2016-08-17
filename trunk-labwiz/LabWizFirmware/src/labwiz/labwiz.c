@@ -204,8 +204,8 @@ void labwiz_get_time(labwiz_time_t * tm)
         tm->Day  = 0;
         tm->Year = 0;
     }else{
-        tm->Month = rtc_date.Month;
-        tm->Day  = rtc_date.Date;
+        tm->Month = (rtc_date.Month>0)?rtc_date.Month:1;
+        tm->Day  = (rtc_date.Date>0)?rtc_date.Date:1;
         tm->Year = rtc_date.Year;
     }
 
