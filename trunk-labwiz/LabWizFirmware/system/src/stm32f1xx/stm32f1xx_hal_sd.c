@@ -362,6 +362,15 @@ HAL_SD_ErrorTypedef HAL_SD_Init(SD_HandleTypeDef *hsd, HAL_SD_CardInfoTypedef *S
   /* Initialize SDIO peripheral interface with default configuration */
   SDIO_Init(hsd->Instance, tmpinit);
   
+
+  errorstate = SD_PowerOFF(hsd);
+  if(errorstate != SD_OK)
+  {
+    return errorstate;
+  }
+  /* 1ms: wait */
+  HAL_Delay(1);
+
   /* Identify card operating voltage */
   errorstate = SD_PowerON(hsd); 
   

@@ -10,11 +10,19 @@
 
 #include "ff.h"
 
+bool fs_card_detected();
+
+bool fs_intialize_card();
+
 bool fs_open_path(char * path);
+
+bool fs_close_path();
 
 bool fs_card_detected(void);
 
 bool fs_exists(char *filename);
+
+void fs_waitbusy(void);
 
 #endif
 

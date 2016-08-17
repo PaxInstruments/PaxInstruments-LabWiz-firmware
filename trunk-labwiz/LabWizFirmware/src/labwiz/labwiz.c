@@ -68,6 +68,7 @@ void WWDG_IRQHandler(void);
 
 void labwiz_init()
 {
+    uint8_t result;
     // All HAL init functions have been called at this point
     drv_uart_init();
     drv_esp8266_init();

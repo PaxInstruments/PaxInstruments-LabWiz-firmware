@@ -35,6 +35,14 @@
 #define TEMPERATURE_UNITS_F     1
 #define TEMPERATURE_UNITS_K     2
 
+typedef enum{
+    FS_OK = 0,
+    FS_INIT_ERROR,
+    FS_PATH_ERROR,
+    FS_OPEN_ERROR,
+    FS_CARD_NOT_DETECTED,
+}sd_result_e;
+
 // Local variables
 // ----------------------------------------------------------------------------
 int m_button_mask = 0;
@@ -65,6 +73,13 @@ uint32_t m_elapsedtime=0;
 
 static char m_scratch[200];
 
+FIL m_log_file_handle;
+FRESULT m_fresult;
+char m_log_fileName[15];
+
+char m_message[20];
+int m_message_count=0;
+
 // Local prototypes
 // ----------------------------------------------------------------------------
 void _t1000_btn_press(uint8_t button);
@@ -75,7 +90,7 @@ void _t1000_fake_data(void);
 uint8_t _t1000_numlength(int16_t num);
 char * _t1000_printtemp(char * buf, int16_t temp);
 char _t1000_current_unit(void);
-bool _t1000_record_start(void);
+sd_result_e _t1000_record_start(void);
 void _t1000_record_stop(void);
 void _t1000_write_header(void);
 void _t1000_write_log(void);
@@ -164,14 +179,21 @@ void loop()
             // We have an area from 19----->130 and 19 ^---v 63 (111 x 44)
 
             // Draw status
-            lcd_print("K",10,0); // Thermocouple type
             lcd_print("B",10,127); // Battery
-            sprintf(m_scratch,"`%c",_t1000_current_unit());
-            lcd_print(m_scratch,10,20);
-            if(!m_logging)
-                lcd_print("Log Off",10,50);
-            else
-                lcd_print("Logging",10,50);
+            sprintf(m_scratch,"K-`%c-",_t1000_current_unit());
+            lcd_print(m_scratch,10,0);
+
+            // Show message or logging information
+            if(m_message_count>0)
+            {
+                m_message_count--;
+                lcd_print(m_message,10,35);
+            }else{
+                if(!m_logging)
+                    lcd_print("Log Off",10,35);
+                else
+                    lcd_print(m_log_fileName,10,35);
+            }
 
             // Increment the current graph point (it wraps around)
             if(m_graphdata_index == 0)
@@ -273,17 +295,39 @@ void loop()
             if(m_button_mask&SW_MASK(SW_A))
             {
                 if(m_logging)
+                {
                     _t1000_record_stop();
-                else
-                    _t1000_record_start();
+                }else if(m_message_count==0){
+                    sd_result_e result;
+                    result = _t1000_record_start();
+                    switch(result){
+                    case FS_INIT_ERROR:
+                        m_message_count = 3*(MS_PER_SECOND/PERIODIC_PERIOD_MS);
+                        sprintf(m_message,"InitErr");
+                        break;
+                    case FS_PATH_ERROR:
+                        m_message_count = 3*(MS_PER_SECOND/PERIODIC_PERIOD_MS);
+                        sprintf(m_message,"Dir Err");
+                        break;
+                    case FS_OPEN_ERROR:
+                        m_message_count = 3*(MS_PER_SECOND/PERIODIC_PERIOD_MS);
+                        sprintf(m_message,"OpenErr");
+                        break;
+                    case FS_CARD_NOT_DETECTED:
+                        m_message_count = 3*(MS_PER_SECOND/PERIODIC_PERIOD_MS);
+                        sprintf(m_message,"No SD card");
+                        break;
+                    case FS_OK: // no break;
+                    default: break;
+                    }
+                }
+
                 m_button_mask&=~SW_MASK(SW_A);
             }
             if(m_button_mask&SW_MASK(SW_B))
             {
                 // This is for changing sample timing
 
-                // Use it for logging
-                _t1000_write_log();
                 m_button_mask&=~SW_MASK(SW_B);
             }
             if(m_button_mask&SW_MASK(SW_C))
@@ -498,13 +542,8 @@ char _t1000_current_unit()
     return 'C';
 }
 
-#include "labwiz/drv_filesystem.h"
-FIL m_log_file;
-FATFS m_FatFs;
-bool _t1000_record_start()
+sd_result_e _t1000_record_start()
 {
-    FRESULT result;
-    char fileName[12];
     uint16_t i = 0,limit=100;
     uint32_t x,written;
 
@@ -512,16 +551,28 @@ bool _t1000_record_start()
     if(m_logging)
         _t1000_record_stop();
 
-    // TODO: Issues with FatFs, disabled all f_xxx calls
-    // until issue is resolved
+#if ENABLE_SD_CARD_LOGGING
+    if(!fs_intialize_card())
+        return FS_INIT_ERROR;
 
-#if 0
-    // Open root
+    if(!fs_card_detected())
+    {
+        return FS_CARD_NOT_DETECTED;
+    }
+
     if(!fs_open_path(""))
-        nop();
+    {
+        // Close everything
+        fs_close_path();
+        // Try and re-init
+        if(!fs_intialize_card())
+            return FS_INIT_ERROR;
+        if(!fs_open_path(""))
+            return FS_PATH_ERROR;
+    }
 
     //Start logging
-#if 1
+
     // Create LDxxxx.CSV for the lowest value of x.
     // Jump by 100 here
     #if 0
@@ -535,46 +586,46 @@ bool _t1000_record_start()
     #endif
     do{
         i+=10;
-        sprintf(fileName,"LD%04d.CSV",i);
+        sprintf(m_log_fileName,"LD%04d.CSV",i);
         // This could take a while, so reset the watchdog here
         //wdt_reset();
-    }while(fs_exists(fileName)&& i<limit);
+    }while(fs_exists(m_log_fileName)&& i<limit);
     // We now know that value doesn't exist, go back 10 and search from here
     limit=1;
     i-=10;
     do{
         i+=1;
-        sprintf(fileName,"LD%04d.CSV",i);
-    }while(fs_exists(fileName)&& i<limit);
-#else
-    sprintf(fileName,"LD0001.CSV");
-#endif
-    result=f_open(&m_log_file, fileName, (FA_WRITE|FA_CREATE_NEW));
-    if(result!=FR_OK)
+        sprintf(m_log_fileName,"LD%04d.CSV",i);
+    }while(fs_exists(m_log_fileName));
+
+    m_fresult=f_open(&m_log_file_handle, m_log_fileName, (FA_WRITE|FA_CREATE_NEW));
+    if(m_fresult!=FR_OK)
     {
-      return false;
+      return FS_OPEN_ERROR;
     }
-    m_logging = true;
-
-    //file.clearWriteError();
-    _t1000_write_header();
-
-    f_sync(&m_log_file);
-
-    return true; //(file.getWriteError() == false);
-#else
-    m_logging = true;
-    _t1000_write_header();
-    return true; //(file.getWriteError() == false);
 #endif
+
+    m_logging = true;
+    _t1000_write_header();
+
+    #if ENABLE_SD_CARD_LOGGING
+    f_sync(&m_log_file_handle);
+    #endif
+
+    return FS_OK;
 }
+
 void _t1000_record_stop()
 {
-#if 0
-    // Close file
-    f_close(&m_log_file);
-#endif
+
     m_logging = false;
+
+    #if ENABLE_SD_CARD_LOGGING
+    // Close file
+    f_close(&m_log_file_handle);
+    fs_close_path();
+    #endif
+
     return;
 }
 
@@ -582,10 +633,11 @@ void _t1000_write_header()
 {
     int x,len;
     uint8_t result;
+    uint32_t written;
 
     len = 0;
     len += sprintf(&(m_scratch[len]),"v%s\n",FIRMWARE_VERSION);
-    len += sprintf(&(m_scratch[len]),"File: %s\n","file.csv");
+    len += sprintf(&(m_scratch[len]),"File: %s\n",m_log_fileName);
     len += sprintf(&(m_scratch[len]),"time (s)");
     for(x=0;x<SENSOR_COUNT;x++)
     {
@@ -599,8 +651,11 @@ void _t1000_write_header()
     #endif
 
     #if ENABLE_SD_CARD_LOGGING
-    // TODO: Add this once we figure out what is going on with the hard fault
-    nop();
+    m_fresult=f_write(&m_log_file_handle, m_scratch, len, &written);
+    if(m_fresult!=FR_OK)
+    {
+      nop();
+    }
     #endif
 
     return;
@@ -609,6 +664,7 @@ void _t1000_write_log()
 {
     volatile uint8_t result;
     int x,len;
+    uint32_t written;
 
     if(m_logging==false) return;
 
@@ -638,8 +694,14 @@ void _t1000_write_log()
     #endif
 
     #if ENABLE_SD_CARD_LOGGING
-    // TODO: Add this once we figure out what is going on with the hard fault
-    nop();
+    m_fresult=f_write(&m_log_file_handle, m_scratch, len, &written);
+    if(m_fresult!=FR_OK)
+    {
+      nop();
+    }
+    // NOTE: This sync should be done at some other interval, not the
+    // main sampling interval, but for now just do it
+    f_sync(&m_log_file_handle);
     #endif
 
     return;
