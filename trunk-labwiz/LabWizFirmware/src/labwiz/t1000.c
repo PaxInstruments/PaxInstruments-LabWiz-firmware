@@ -638,7 +638,7 @@ void _t1000_write_header()
     len = 0;
     len += sprintf(&(m_scratch[len]),"v%s\n",FIRMWARE_VERSION);
     len += sprintf(&(m_scratch[len]),"File: %s\n",m_log_fileName);
-    len += sprintf(&(m_scratch[len]),"time (s)");
+    len += sprintf(&(m_scratch[len]),"time (s),elapsed");
     for(x=0;x<SENSOR_COUNT;x++)
     {
         len += sprintf(&(m_scratch[len]),", temp_%d (%c)",x,_t1000_current_unit());
@@ -670,23 +670,18 @@ void _t1000_write_log()
 
     #if ENABLE_SERIAL_LOGGING
     len = 0;
-    len += sprintf(&(m_scratch[len]),"%d,",m_elapsedtime);
+    len += sprintf(&(m_scratch[len]),"%d,%d,",0,m_elapsedtime);
     for(x=0;x<SENSOR_COUNT;x++)
     {
         len += sprintf(&(m_scratch[len]),"%d,",m_graphdata[x][m_graphdata_index]);
     }
 
-#if 1
     {
-        extern RTC_HandleTypeDef hrtc;
-        HAL_StatusTypeDef ret;
-        RTC_TimeTypeDef tm;
-        ret = HAL_RTC_GetTime(&hrtc, &tm, RTC_FORMAT_BIN);
-        if(ret!=HAL_OK)
-            nop();
-        len += sprintf(&(m_scratch[len-1]),"%d:%d:%d",tm.Hours,tm.Minutes,tm.Seconds);
+        labwiz_time_t tm;
+        labwiz_get_time(&tm);
+        len += sprintf(&(m_scratch[len]),"%02d-%02d-%d,",tm.Month,tm.Day,tm.Year+2000);
+        len += sprintf(&(m_scratch[len]),"%02d:%02d:%02d,",tm.Hours,tm.Minutes,tm.Seconds);
     }
-#endif
 
     sprintf(&(m_scratch[len-1]),"\n");
     result = CDC_Transmit_FS(m_scratch,len);

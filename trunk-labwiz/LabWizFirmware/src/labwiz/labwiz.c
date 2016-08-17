@@ -14,7 +14,6 @@
 #include "labwiz/drv_spi.h"
 #include "labwiz/drv_lcd.h"
 
-
 #include "stm32f1xx_hal.h"
 
 #include "FreeRTOS.h"
@@ -175,6 +174,41 @@ void labwiz_task_init()
 void labwiz_set_btn_callback(labwiz_btn_callback cb)
 {
     m_btn_cb = cb;
+    return;
+}
+
+void labwiz_get_time(labwiz_time_t * tm)
+{
+    HAL_StatusTypeDef ret;
+    RTC_TimeTypeDef rtc_tm;
+    RTC_DateTypeDef rtc_date;
+
+    if(tm==NULL) return false;
+
+    ret = HAL_RTC_GetTime(&hrtc, &rtc_tm, RTC_FORMAT_BIN);
+    if(ret!=HAL_OK)
+    {
+        tm->Hours = 0;
+        tm->Minutes = 0;
+        tm->Seconds = 0;
+    }else{
+        tm->Hours = rtc_tm.Hours;
+        tm->Minutes = rtc_tm.Minutes;
+        tm->Seconds = rtc_tm.Seconds;
+    }
+
+    ret =HAL_RTC_GetDate(&hrtc, &rtc_date, RTC_FORMAT_BIN);
+    if(ret!=HAL_OK)
+    {
+        tm->Month = 0;
+        tm->Day  = 0;
+        tm->Year = 0;
+    }else{
+        tm->Month = rtc_date.Month;
+        tm->Day  = rtc_date.Date;
+        tm->Year = rtc_date.Year;
+    }
+
     return;
 }
 

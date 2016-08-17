@@ -291,7 +291,7 @@ HAL_StatusTypeDef HAL_RTC_Init(RTC_HandleTypeDef *hrtc)
     
     if(hrtc->Init.OutPut != RTC_OUTPUTSOURCE_NONE)
     {
-      /* Disable the selected Tamper pin */
+      /* Disable the output on the Tamper pin */
       CLEAR_BIT(BKP->CR, BKP_CR_TPE);
     }
     
@@ -336,9 +336,11 @@ HAL_StatusTypeDef HAL_RTC_Init(RTC_HandleTypeDef *hrtc)
     }
     
     /* Initialize date to 1st of January 2000 */
+#if 0
     hrtc->DateToUpdate.Year = 0x00;
     hrtc->DateToUpdate.Month = RTC_MONTH_JANUARY;
     hrtc->DateToUpdate.Date = 0x01;
+#endif
 
     /* Set RTC state */
     hrtc->State = HAL_RTC_STATE_READY;
