@@ -80,6 +80,9 @@ char m_log_fileName[15];
 char m_message[20];
 int m_message_count=0;
 
+// DEBUG
+uint32_t m_test_adc=0;
+
 // Local prototypes
 // ----------------------------------------------------------------------------
 void _t1000_btn_press(uint8_t button);
@@ -328,6 +331,31 @@ void loop()
             {
                 // This is for changing sample timing
 
+                // DEBUG, use for testing events
+                #if 0
+                {
+                    extern ADC_HandleTypeDef hadc1;
+                    uint32_t val;
+                    // Activate the ADC peripheral and start conversions
+                    HAL_ADC_Start(&hadc1);
+                    // Wait for ADC conversion completion
+                    if(HAL_ADC_PollForConversion(&hadc1, 1000) != HAL_OK)
+                    {
+                        // Error
+                        nop();
+                    }
+                    // Retrieve conversion results
+                    val = HAL_ADC_GetValue(&hadc1);
+                    m_test_adc = val;
+                    // Stop conversion and disable the ADC peripheral
+                    if(HAL_ADC_Stop(&hadc1)!=HAL_OK)
+                    {
+                        //error?
+                        nop();
+                    }
+                }
+                #endif
+
                 m_button_mask&=~SW_MASK(SW_B);
             }
             if(m_button_mask&SW_MASK(SW_C))
@@ -504,6 +532,8 @@ void _t1000_fake_data()
     val+=step;
     if(val>=400 || val<= 200) step=step*-1;
     #endif
+
+    m_graphdata[0][m_graphdata_index]=(uint16_t)m_test_adc;
 
 #if 0
     temperatures_int[0] = convertTemperatureInt(temperatures_int[0]);

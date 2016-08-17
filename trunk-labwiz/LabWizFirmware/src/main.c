@@ -237,6 +237,14 @@ static void MX_ADC1_Init(void)
     Error_Handler();
   }
 
+  // Do we need?
+#if 0
+  if(HAL_ADCEx_Calibration_Start(&hadc1)!=HAL_OK)
+  {
+      // Error
+  }
+#endif
+
 }
 
 /* RTC init function */
