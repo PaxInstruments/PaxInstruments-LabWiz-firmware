@@ -67,8 +67,6 @@
 #define SPI1MOSI_GPIO_Port GPIOA
 #define Breakout15_Pin GPIO_PIN_4
 #define Breakout15_GPIO_Port GPIOC
-#define VBAT2_Pin GPIO_PIN_5
-#define VBAT2_GPIO_Port GPIOC
 #define Breakout_5_Pin GPIO_PIN_0
 #define Breakout_5_GPIO_Port GPIOB
 #define Header_10_Pin GPIO_PIN_1
