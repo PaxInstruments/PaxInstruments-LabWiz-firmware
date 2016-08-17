@@ -79,8 +79,6 @@ void labwiz_init()
     vSemaphoreCreateBinary(m_labwiz_isr_semaphore);
     m_btn_cb = NULL;
 
-    fs_intialize_card();
-
     /* init code for FATFS */
     MX_FATFS_Init();
 

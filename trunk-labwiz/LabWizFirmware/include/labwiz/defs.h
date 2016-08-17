@@ -20,6 +20,8 @@
 #define nop()   asm("nop")
 #endif
 
+#define MS_PER_SECOND       1000
+
 // Here is where we should specify which pins are defined
 // See port.h for more information on pin IO
 

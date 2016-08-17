@@ -41,17 +41,28 @@ FATFS m_FatFs;
 DIR m_log_dir;
 FRESULT fret;
 FIL m_tmp_fp;
+
+extern HAL_SD_CardInfoTypedef SDCardInfo;
+
 // Local prototypes
 // ----------------------------------------------------------------------------
 
 // Public functions
 // ----------------------------------------------------------------------------
+bool fs_card_detected()
+{
+    if(SDCardInfo.CardCapacity>0) return true;
+    return false;
+}
 bool fs_intialize_card()
 {
     uint8_t result;
     result = BSP_SD_Init();
     if(result != MSD_OK)
         return false;
+
+    while(BSP_SD_GetStatus()==SD_TRANSFER_BUSY);
+
     return true;
 }
 bool fs_open_path(char * path)
@@ -63,6 +74,9 @@ bool fs_open_path(char * path)
     fret = f_opendir(&m_log_dir,"");
     if(fret!=FR_OK)
         return false;
+
+    while(BSP_SD_GetStatus()==SD_TRANSFER_BUSY);
+
     return true;
 }
 bool fs_close_path()
@@ -79,16 +93,17 @@ bool fs_close_path()
         result = false;
     return result;
 }
-bool fs_card_detected()
-{
-    return true;
-}
 
 bool fs_exists(char *filename)
 {
     fret = f_open(&m_tmp_fp, filename, FA_READ);
     f_close(&m_tmp_fp);
     return (fret==FR_OK);
+}
+
+void fs_waitbusy()
+{
+    while(BSP_SD_GetStatus()==SD_TRANSFER_BUSY);
 }
 // Private functions
 // ----------------------------------------------------------------------------
