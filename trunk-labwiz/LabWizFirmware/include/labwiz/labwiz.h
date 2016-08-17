@@ -10,6 +10,15 @@
 
 #define SW_MASK(S)          (1<<(S))
 
+typedef enum{
+    BATTERY_NOT_INSTALLED = 0,
+    BATTERY_FULL,
+    BATTERY_75,
+    BATTERY_50,
+    BATTERY_25,
+    BATTERY_EMPTY,
+}battery_status_e;
+
 typedef struct
 {
   uint8_t Hours; /* Min_Data = 0 and Max_Data = 23 */
@@ -31,6 +40,9 @@ void labwiz_set_btn_callback(labwiz_btn_callback cb);
 
 void labwiz_get_time(labwiz_time_t * tm);
 
+battery_status_e labwiz_get_battery_status(void);
+
+uint16_t labwiz_get_battery_mV(void);
 
 #endif
 

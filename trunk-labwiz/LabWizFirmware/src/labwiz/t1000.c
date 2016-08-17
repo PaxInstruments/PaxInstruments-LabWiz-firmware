@@ -182,10 +182,29 @@ void loop()
             // We have an area from 19----->130 and 19 ^---v 63 (111 x 44)
 
             // Draw status
-            lcd_print("B",10,127); // Battery
             sprintf(m_scratch,"K-`%c-",_t1000_current_unit());
             lcd_print(m_scratch,10,0);
 
+            // Draw battery icon
+            #if 0
+            _t1000_draw_battery(10,127);
+            #else
+            {
+                uint16_t tmp16,a,b;
+                tmp16 = labwiz_get_battery_mV();
+                tmp16 = tmp16/10;
+                if(tmp16<100)
+                {
+                    //lcd_print("|",10,127);
+                    lcd_print("NoBat",10,100);
+                }else{
+                    a = tmp16/100;
+                    b = tmp16%100;
+                    sprintf(m_scratch,"%01d.%02dV",a,b);
+                    lcd_print(m_scratch,10,100);
+                }
+            }
+            #endif
             // Show message or logging information
             if(m_message_count>0)
             {
@@ -193,9 +212,11 @@ void loop()
                 lcd_print(m_message,10,35);
             }else{
                 if(!m_logging)
+                {
                     lcd_print("Log Off",10,35);
-                else
+                }else{
                     lcd_print(m_log_fileName,10,35);
+                }
             }
 
             // Increment the current graph point (it wraps around)
@@ -329,31 +350,10 @@ void loop()
             }
             if(m_button_mask&SW_MASK(SW_B))
             {
-                // This is for changing sample timing
-
-                // DEBUG, use for testing events
                 #if 0
-                {
-                    extern ADC_HandleTypeDef hadc1;
-                    uint32_t val;
-                    // Activate the ADC peripheral and start conversions
-                    HAL_ADC_Start(&hadc1);
-                    // Wait for ADC conversion completion
-                    if(HAL_ADC_PollForConversion(&hadc1, 1000) != HAL_OK)
-                    {
-                        // Error
-                        nop();
-                    }
-                    // Retrieve conversion results
-                    val = HAL_ADC_GetValue(&hadc1);
-                    m_test_adc = val;
-                    // Stop conversion and disable the ADC peripheral
-                    if(HAL_ADC_Stop(&hadc1)!=HAL_OK)
-                    {
-                        //error?
-                        nop();
-                    }
-                }
+                // This is for changing sample timing
+                #else
+                // DEBUG, use for testing events
                 #endif
 
                 m_button_mask&=~SW_MASK(SW_B);
@@ -729,5 +729,25 @@ void _t1000_write_log()
     #endif
 
     return;
+}
+void _t1000_draw_battery(int row,int col)
+{
+    battery_status_e status;
+    status = labwiz_get_battery_status();
+    switch(status){
+    case BATTERY_FULL:
+        lcd_print("{",row,col);
+        break;
+    case BATTERY_50:
+        lcd_print("}",row,col);
+        break;
+    case BATTERY_25:
+        lcd_print("_",row,col);
+        break;
+    case BATTERY_NOT_INSTALLED:
+    default:
+        lcd_print("|",row,col);
+        break;
+    }
 }
 // eof
