@@ -7,7 +7,7 @@
  **
  ****************************************************************************/
 
-#include "labwiz/defs.h"
+#include "labwiz/labwizdefs.h"
 #include "labwiz/drv_esp8266.h"
 #include "labwiz/drv_serial.h"
 

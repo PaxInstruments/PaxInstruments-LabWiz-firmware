@@ -5,7 +5,7 @@
  **
  ****************************************************************************/
 
-#include "labwiz/defs.h"
+#include "labwiz/labwizdefs.h"
 #include "labwiz/labwiz.h"
 
 #include "labwiz/drv_serial.h"

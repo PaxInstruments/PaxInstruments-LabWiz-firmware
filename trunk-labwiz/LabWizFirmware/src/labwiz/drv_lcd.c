@@ -6,10 +6,10 @@
  ** This driver provides functions to write the LCD
  **
  ****************************************************************************/
-
+#include "stdlib.h"
 #include "string.h"
 
-#include "labwiz/defs.h"
+#include "labwiz/labwizdefs.h"
 #include "labwiz/drv_spi.h"
 #include "labwiz/drv_lcd.h"
 #include "labwiz/font5x7.h"
@@ -136,8 +136,8 @@ uint8_t m_lcd_buffer[2][LCD_PAGES][LCD_COLS];
 // ---------------------------------------------------------------------------
 void _lcd_setup(void);
 void _lcd_draw(void);
-void _lcdDEBUG_test_pattern1(void);
-void lcd_print_test();
+//void _lcdDEBUG_test_pattern1(void);
+//void lcd_print_test();
 
 // Public functions
 // ---------------------------------------------------------------------------
@@ -275,7 +275,7 @@ void lcd_print(char * st,int row,int col)
 {
     char c;
     uint8_t * ptr;
-    uint8_t page,bits,x,data,olddata,pos,cnt,src;
+    uint8_t page,bits,x,data,pos,cnt,src;
     if(row>LCD_ROWS || col>130) return;
     row+=CHAR_HEIGHT;
     while(*st)
@@ -465,6 +465,7 @@ void _lcd_draw()
     return;
 }
 
+#if 0
 // DEBUG functions
 void _lcdDEBUG_test_pattern1()
 {
@@ -488,4 +489,5 @@ void lcd_print_test()
     memcpy(ptr,fonttest,30);
     return;
 }
+#endif
 // eof

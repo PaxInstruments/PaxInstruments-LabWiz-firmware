@@ -16,7 +16,7 @@
 #include "string.h"
 #include "limits.h"
 
-#include "labwiz/defs.h"
+#include "labwiz/labwizdefs.h"
 #include "labwiz/drv_serial.h"
 
 #include "FreeRTOS.h"
@@ -410,7 +410,7 @@ void USART2_IRQHandler()
 
     // Clear the error flags
     {
-        uint32_t tmpreg;
+        //uint32_t tmpreg;
         // Reads will clear the error flags?
         //__HAL_UART_CLEAR_PEFLAG(huart);
         //tmpreg = huart2.Instance->SR;

@@ -7,9 +7,9 @@
 #include "stdlib.h"
 #include "string.h"
 
+#include "defs.h"
 #include "t1000.h"
 
-#include "labwiz/defs.h"
 #include "labwiz/labwiz.h"
 #include "labwiz/drv_usb.h"
 #include "labwiz/drv_lcd.h"
@@ -640,7 +640,8 @@ void _t1000_write_header()
     uint32_t written;
 
     len = 0;
-    len += sprintf(&(m_scratch[len]),"v%s\n",FIRMWARE_VERSION);
+    len += sprintf(&(m_scratch[len]),"Labwiz v%s\n",LABWIZ_VERSION);
+    len += sprintf(&(m_scratch[len]),"Firmware v%s\n",FIRMWARE_VERSION);
     len += sprintf(&(m_scratch[len]),"File: %s\n",m_log_fileName);
     len += sprintf(&(m_scratch[len]),"date,time");
     for(x=0;x<SENSOR_COUNT;x++)

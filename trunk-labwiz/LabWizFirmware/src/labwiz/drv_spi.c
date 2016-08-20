@@ -7,7 +7,7 @@
  **
  ****************************************************************************/
 
-#include "labwiz/defs.h"
+#include "labwiz/labwizdefs.h"
 #include "labwiz/drv_spi.h"
 
 #include "stm32f1xx_hal.h"

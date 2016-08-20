@@ -130,6 +130,8 @@ static unsigned char Font5x7[] = {
 //0x17, 0x08, 0x04, 0x5A, 0x69, // 1/5?
 //0x17, 0x08, 0x54, 0x22, 0x51, // 1/x
 
+#if 0
+// This is a 4x6 font we use for testing, leave alone
 #define fonttest_width 4
 #define fonttest_height 6
 static unsigned char fonttest[] = {
@@ -231,6 +233,6 @@ static unsigned char fonttest[] = {
         0xFC,0xFC,0xFC,0xFC,// 'Block sym'
 
 };
-
+#endif
 
 #endif

@@ -7,7 +7,7 @@
  **
  ****************************************************************************/
 
-#include "labwiz/defs.h"
+#include "labwiz/labwizdefs.h"
 #include "labwiz/drv_usb.h"
 #include "labwiz/usbd_cdc_if.h"
 

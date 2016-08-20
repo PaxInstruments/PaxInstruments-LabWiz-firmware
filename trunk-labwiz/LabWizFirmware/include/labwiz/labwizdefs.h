@@ -5,15 +5,15 @@
  **
  ****************************************************************************/
 
-#ifndef __DEFS_H__
-#define __DEFS_H__  // Include guard
+#ifndef __LABWIZDEFS_H__
+#define __LABWIZDEFS_H__  // Include guard
 
 #include "stdint.h"
 #include "stdbool.h"
 #include "stm32f1xx.h"
 #include "labwiz/port.h"
 
-#define FIRMWARE_VERSION    "0.1"
+#define LABWIZ_VERSION    "1.0b"
 
 #pragma GCC diagnostic ignored "-Wunused-but-set-variable"
 #pragma GCC diagnostic ignored "-Wconversion"
