@@ -8,7 +8,6 @@
 #include "string.h"
 
 #include "defs.h"
-#include "t1000.h"
 
 #include "labwiz/labwiz.h"
 #include "labwiz/drv_usb.h"
