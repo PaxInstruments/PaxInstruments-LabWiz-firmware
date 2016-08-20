@@ -122,14 +122,13 @@ uint8_t lcdcmds[LCD_MAX] = {
 // Local module variables
 // ---------------------------------------------------------------------------
 
+// Double buffering
+lcd_screen_t m_lcd_screen_A;
+lcd_screen_t m_lcd_screen_B;
+lcd_screen_t * m_lcd_write_ptr = &m_lcd_screen_A;
+lcd_screen_t * m_lcd_send_ptr = &m_lcd_screen_B;
 
-#ifndef LCD_DOUBLE_BUFFER
-uint8_t m_lcd_buffer[LCD_PAGES][LCD_COLS];
-#else
-#define WRITE_BUFFER        0
-#define SEND_BUFFER         1
-uint8_t m_lcd_buffer[2][LCD_PAGES][LCD_COLS];
-#endif
+bool m_swap_request = false;
 
 
 // Private prototypes
@@ -201,12 +200,7 @@ void lcd_task( void *pvParameters )
         // DEBUG, run every XXXms (slow for testing)
         vTaskDelay(portTICK_PERIOD_MS*100);
         //pin_bl(toggle());
-        #ifndef LCD_DOUBLE_BUFFER
         _lcd_draw();
-        #else
-        memcpy(send buffer, draw buffer, size);
-        //lcd_draw(send_buffer);
-        #endif
 
     }
 
@@ -222,13 +216,15 @@ void lcd_task( void *pvParameters )
 
 void lcd_blank()
 {
-    memset(m_lcd_buffer,0,sizeof(m_lcd_buffer));
+    memset(&(m_lcd_write_ptr->data),0,sizeof(lcd_screen_t));
     return;
 }
 
-// Disable conversion warnings, we are doing all sorts of bit operations
-// and the compiler complains about everything.
-#pragma GCC diagnostic ignored "-Wconversion"
+void lcd_latch(void)
+{
+    m_swap_request = true;
+    return;
+}
 
 void lcd_set_pixel(int row, int col)
 {
@@ -237,11 +233,7 @@ void lcd_set_pixel(int row, int col)
     p = (uint8_t)(row>>3); // div by 8
     i = (uint8_t)(row-(p*8));       // i is the index in the byte
 
-    #ifndef LCD_DOUBLE_BUFFER
-    m_lcd_buffer[p][col] = (uint8_t)(m_lcd_buffer[p][col]|(1<<(7-i)));
-    #else
-    nop();
-    #endif
+    m_lcd_write_ptr->data[p][col] = (uint8_t)(m_lcd_write_ptr->data[p][col]|(1<<(7-i)));
 
     return;
 }
@@ -252,11 +244,9 @@ void lcd_clear_pixel(int row, int col)
     p = (uint8_t)(row>>3);
     i = (uint8_t)(row-(p*8));
     // i is the page index, p is the row in the page
-    #ifndef LCD_DOUBLE_BUFFER
-    m_lcd_buffer[i][col] = (uint8_t)(m_lcd_buffer[p][col]&(~(1<<i)));
-    #else
-    nop();
-    #endif
+
+    m_lcd_write_ptr->data[i][col] = (uint8_t)(m_lcd_write_ptr->data[p][col]&(~(1<<i)));
+
     return;
 }
 
@@ -297,7 +287,7 @@ void lcd_print(char * st,int row,int col)
                 src = 0;
                 for(cnt=0;cnt<8;cnt++){ src<<=1; src|=(data&1); data>>=1;}
                 // Flip font ^^^^^^^^^^^
-                m_lcd_buffer[page][pos++] |= src; // or it? or overwrite with just =  ?
+                m_lcd_write_ptr->data[page][pos++] |= src; // or it? or overwrite with just =  ?
                 ptr++;
             }
         }
@@ -318,7 +308,7 @@ void lcd_print(char * st,int row,int col)
                 src = 0;
                 for(cnt=0;cnt<8;cnt++){ src<<=1; src|=(data&1); data>>=1;}
                 // Flip font ^^^^^^^^^^^
-                m_lcd_buffer[page][pos++] |= src; // or it? or overwrite with just =  ?
+                m_lcd_write_ptr->data[page][pos++] |= src; // or it? or overwrite with just =  ?
                 ptr++;
             }
         }
@@ -347,9 +337,6 @@ void lcd_line(int r0, int c0, int r1, int c1)
   return;
 }
 
-// Re-enable the warnings
-#pragma GCC diagnostic warning "-Wconversion"
-
 
 void lcd_backlight_toggle()
 {
@@ -366,13 +353,13 @@ void lcd_backlight_enable(bool enable)
 void lcd_get_screen(lcd_screen_t * screen)
 {
     if(screen==NULL) return;
-    memcpy(screen,m_lcd_buffer,sizeof(m_lcd_buffer));
+    memcpy(screen,m_lcd_write_ptr,sizeof(lcd_screen_t));
     return;
 }
 void lcd_set_screen(lcd_screen_t * screen)
 {
     if(screen==NULL) return;
-    memcpy(m_lcd_buffer,screen,sizeof(m_lcd_buffer));
+    memcpy(m_lcd_write_ptr,screen,sizeof(lcd_screen_t));
     return;
 }
 
@@ -457,9 +444,20 @@ void _lcd_draw()
 
         m_set_data();
         // Now send data to LCD
-        drv_spi3_tx(&(m_lcd_buffer[page][0]), LCD_COLS);
+        drv_spi3_tx( &(m_lcd_send_ptr->data[page][0]) , LCD_COLS);
         m_cs_disable();
 
+    }
+
+    // This is double buffering, after we write a full screen, if we have a new
+    // screen, switch the buffer pointers
+    if(m_swap_request)
+    {
+        lcd_screen_t * tmpsptr;
+        tmpsptr = m_lcd_write_ptr;
+        m_lcd_write_ptr = m_lcd_send_ptr;
+        m_lcd_send_ptr = tmpsptr;
+        m_swap_request=false;
     }
 
     return;
@@ -485,7 +483,7 @@ void _lcdDEBUG_test_pattern1()
 void lcd_print_test()
 {
     uint8_t * ptr;
-    ptr = &(m_lcd_buffer[0][0]);
+    ptr = &(m_lcd_write_ptr->data[0][0]);
     memcpy(ptr,fonttest,30);
     return;
 }

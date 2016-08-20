@@ -129,7 +129,8 @@ void setup()
 
     lcd_blank();
     labwiz_set_btn_callback(_t1000_btn_press);
-
+    lcd_print("Pax Instruments t1000",30,3);
+    lcd_latch();
 
     for(uint8_t c = 0; c < SENSOR_COUNT; c++)
     {
@@ -141,7 +142,6 @@ void setup()
 
     m_logging = false;
 
-    lcd_print("Pax Instruments t1000",30,3);
 
     return;
 }
@@ -290,6 +290,8 @@ void loop()
                 #endif
 
             }// end for sensor
+
+            lcd_latch();
 
             _t1000_write_log();
 

@@ -21,7 +21,7 @@
 #define MAX_COL     (LCD_COLS-1)
 
 typedef struct{
-    uint8_t data[LCD_ROWS][LCD_COLS];
+    uint8_t data[LCD_PAGES][LCD_COLS];
 }lcd_screen_t;
 
 
@@ -30,6 +30,8 @@ void lcd_init(void);
 void lcd_task( void *pvParameters );
 
 void lcd_blank(void);
+
+void lcd_latch(void);
 
 void lcd_set_pixel(int row, int col);
 
