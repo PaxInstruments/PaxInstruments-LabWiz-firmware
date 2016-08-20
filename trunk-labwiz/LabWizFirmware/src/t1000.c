@@ -7,8 +7,9 @@
 #include "stdlib.h"
 #include "string.h"
 
+#include "t1000.h"
+
 #include "labwiz/defs.h"
-#include "labwiz/t1000.h"
 #include "labwiz/labwiz.h"
 #include "labwiz/drv_usb.h"
 #include "labwiz/drv_lcd.h"
@@ -35,14 +36,18 @@
 #define TEMPERATURE_UNITS_K     2
 
 typedef enum{
-    FS_OK = 0,
-    FS_INIT_ERROR,
-    FS_PATH_ERROR,
-    FS_OPEN_ERROR,
-    FS_CARD_NOT_DETECTED,
-}sd_result_e;
+    FILE_OK = 0,
+    FILE_INIT_ERROR,
+    FILE_PATH_ERROR,
+    FILE_OPEN_ERROR,
+    FILE_CARD_NOT_DETECTED,
+}file_result_e;
 
-#define SW_BACKLIGHT        SW_E
+#define BTN_RECORD          SW_A
+#define BTN_TIME            SW_B
+#define BTN_UNITS           SW_C
+#define BTN_GRAPH           SW_D
+#define BTN_BACKLIGHT       SW_E
 
 // Local variables
 // ----------------------------------------------------------------------------
@@ -94,7 +99,7 @@ void _t1000_fake_data(void);
 uint8_t _t1000_numlength(int16_t num);
 char * _t1000_printtemp(char * buf, int16_t temp);
 char _t1000_current_unit(void);
-sd_result_e _t1000_record_start(void);
+file_result_e _t1000_record_start(void);
 void _t1000_record_stop(void);
 void _t1000_write_header(void);
 void _t1000_write_log(void);
@@ -120,14 +125,6 @@ void setup()
     for(x=1;x<5;x++)
         lcd_set_pixel((uint8_t)((x*10)+15),17);
 
-    // Test
-#if 0
-    lcd_print("123.4",0,(0*33)+2);
-    lcd_print("123.4",0,(1*33)+2);
-    lcd_print("123.4",0,(2*33)+2);
-    lcd_print("123.4",0,(3*33)+2);
-    lcd_print("TypK-Not Logging-1s-E",10,0);
-#endif
     lcd_get_screen(&lcd_screen1);
 
     lcd_blank();
@@ -188,25 +185,8 @@ void loop()
             lcd_print(m_scratch,10,0);
 
             // Draw battery icon
-            #if 1
             _t1000_draw_battery(10,127);
-            #else
-            {
-                uint16_t tmp16,a,b;
-                tmp16 = labwiz_get_battery_mV();
-                tmp16 = tmp16/10;
-                if(tmp16<100)
-                {
-                    //lcd_print("|",10,127);
-                    lcd_print("NoBat",10,100);
-                }else{
-                    a = tmp16/100;
-                    b = tmp16%100;
-                    sprintf(m_scratch,"%01d.%02dV",a,b);
-                    lcd_print(m_scratch,10,100);
-                }
-            }
-            #endif
+
             // Show message or logging information
             if(m_message_count>0)
             {
@@ -318,67 +298,62 @@ void loop()
         // Detect button pushes
         if(m_button_mask!=0)
         {
-            if(m_button_mask&SW_MASK(SW_A))
+            if(m_button_mask&SW_MASK(BTN_RECORD))
             {
                 if(m_logging)
                 {
                     _t1000_record_stop();
                 }else if(m_message_count==0){
-                    sd_result_e result;
+                    file_result_e result;
                     result = _t1000_record_start();
                     switch(result){
-                    case FS_INIT_ERROR:
+                    case FILE_INIT_ERROR:
                         m_message_count = 3*(MS_PER_SECOND/PERIODIC_PERIOD_MS);
                         sprintf(m_message,"InitErr");
                         break;
-                    case FS_PATH_ERROR:
+                    case FILE_PATH_ERROR:
                         m_message_count = 3*(MS_PER_SECOND/PERIODIC_PERIOD_MS);
                         sprintf(m_message,"Dir Err");
                         break;
-                    case FS_OPEN_ERROR:
+                    case FILE_OPEN_ERROR:
                         m_message_count = 3*(MS_PER_SECOND/PERIODIC_PERIOD_MS);
                         sprintf(m_message,"OpenErr");
                         break;
-                    case FS_CARD_NOT_DETECTED:
+                    case FILE_CARD_NOT_DETECTED:
                         m_message_count = 3*(MS_PER_SECOND/PERIODIC_PERIOD_MS);
                         sprintf(m_message,"No SD card");
                         break;
-                    case FS_OK: // no break;
+                    case FILE_OK: // no break;
                     default: break;
                     }
                 }
 
-                m_button_mask&=~SW_MASK(SW_A);
+                m_button_mask&=~SW_MASK(BTN_RECORD);
             }
-            if(m_button_mask&SW_MASK(SW_B))
+            if(m_button_mask&SW_MASK(BTN_TIME))
             {
-                #if 0
-                // This is for changing sample timing
-                #else
-                // DEBUG, use for testing events
-                #endif
 
-                m_button_mask&=~SW_MASK(SW_B);
+                m_button_mask&=~SW_MASK(BTN_TIME);
             }
-            if(m_button_mask&SW_MASK(SW_C))
+            if(m_button_mask&SW_MASK(BTN_UNITS))
             {
                 if(m_temperatureUnit==TEMPERATURE_UNITS_K)
                     m_temperatureUnit=TEMPERATURE_UNITS_C;
                 else
                     m_temperatureUnit++;
-                m_button_mask&=~SW_MASK(SW_C);
+                m_button_mask&=~SW_MASK(BTN_UNITS);
             }
-            if(m_button_mask&SW_MASK(SW_D))
+            if(m_button_mask&SW_MASK(BTN_GRAPH))
             {
                 m_current_channel++;
                 if(m_current_channel>SENSOR_COUNT)
                     m_current_channel=0;
-                m_button_mask&=~SW_MASK(SW_D);
+                m_button_mask&=~SW_MASK(BTN_GRAPH);
             }
-            if(m_button_mask&SW_MASK(SW_BACKLIGHT))
+            if(m_button_mask&SW_MASK(BTN_BACKLIGHT))
             {
                 lcd_backlight_toggle();
-                m_button_mask&=~SW_MASK(SW_BACKLIGHT);
+                m_button_mask&=~SW_MASK(BTN_BACKLIGHT);
             }
         }
 
@@ -535,8 +510,6 @@ void _t1000_fake_data()
     if(val>=400 || val<= 200) step=step*-1;
     #endif
 
-    m_graphdata[0][m_graphdata_index]=(uint16_t)m_test_adc;
-
 #if 0
     temperatures_int[0] = convertTemperatureInt(temperatures_int[0]);
     temperatures_int[1] = convertTemperatureInt(temperatures_int[1]);
@@ -574,7 +547,7 @@ char _t1000_current_unit()
     return 'C';
 }
 
-sd_result_e _t1000_record_start()
+file_result_e _t1000_record_start()
 {
     uint16_t i = 0,limit=100;
 
@@ -584,11 +557,11 @@ sd_result_e _t1000_record_start()
 
 #if ENABLE_SD_CARD_LOGGING
     if(!fs_intialize_card())
-        return FS_INIT_ERROR;
+        return FILE_INIT_ERROR;
 
     if(!fs_card_detected())
     {
-        return FS_CARD_NOT_DETECTED;
+        return FILE_CARD_NOT_DETECTED;
     }
 
     if(!fs_open_path(""))
@@ -597,9 +570,9 @@ sd_result_e _t1000_record_start()
         fs_close_path();
         // Try and re-init
         if(!fs_intialize_card())
-            return FS_INIT_ERROR;
+            return FILE_INIT_ERROR;
         if(!fs_open_path(""))
-            return FS_PATH_ERROR;
+            return FILE_PATH_ERROR;
     }
 
     //Start logging
@@ -632,7 +605,7 @@ sd_result_e _t1000_record_start()
     m_fresult=f_open(&m_log_file_handle, m_log_fileName, (FA_WRITE|FA_CREATE_NEW));
     if(m_fresult!=FR_OK)
     {
-      return FS_OPEN_ERROR;
+      return FILE_OPEN_ERROR;
     }
 #endif
 
@@ -643,7 +616,7 @@ sd_result_e _t1000_record_start()
     f_sync(&m_log_file_handle);
     #endif
 
-    return FS_OK;
+    return FILE_OK;
 }
 
 void _t1000_record_stop()
@@ -740,17 +713,21 @@ void _t1000_draw_battery(int row,int col)
     status = labwiz_get_battery_status();
     switch(status){
     case BATTERY_FULL:
-        lcd_print("{",row,col);
+        sprintf(m_scratch,"%c",BATTERY_FULL_CHAR);
+        lcd_print(m_scratch,row,col);
         break;
     case BATTERY_50:
-        lcd_print("}",row,col);
+        sprintf(m_scratch,"%c",BATTERY_50_CHAR);
+        lcd_print(m_scratch,row,col);
         break;
     case BATTERY_25:
-        lcd_print("_",row,col);
+        sprintf(m_scratch,"%c",BATTERY_25_CHAR);
+        lcd_print(m_scratch,row,col);
         break;
     case BATTERY_NOT_INSTALLED:
     default:
-        lcd_print("|",row,col);
+        sprintf(m_scratch,"%c",BATTERY_NOT_INSTALLED_CHAR);
+        lcd_print(m_scratch,row,col);
         break;
     }
 }

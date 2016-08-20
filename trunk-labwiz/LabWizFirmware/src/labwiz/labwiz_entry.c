@@ -1,6 +1,6 @@
 /**
   ******************************************************************************
-  * File Name          : main.c
+  * File Name          : labwiz_entry.c
   * Description        : Main program body
   ******************************************************************************
   *
@@ -251,8 +251,8 @@ static void MX_ADC1_Init(void)
 static void MX_RTC_Init(void)
 {
 
-  RTC_TimeTypeDef sTime;
-  RTC_DateTypeDef DateToUpdate;
+  //RTC_TimeTypeDef sTime;
+  //RTC_DateTypeDef DateToUpdate;
 
     /**Initialize RTC and set the Time and Date 
     */

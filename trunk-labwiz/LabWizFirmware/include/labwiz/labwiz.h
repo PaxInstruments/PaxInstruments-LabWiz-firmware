@@ -21,6 +21,11 @@ typedef enum{
     BATTERY_EMPTY,
 }battery_status_e;
 
+#define BATTERY_FULL_CHAR           '{'
+#define BATTERY_50_CHAR             '}'
+#define BATTERY_25_CHAR             '_'
+#define BATTERY_NOT_INSTALLED_CHAR  '|'
+
 typedef struct
 {
   uint8_t Hours; /* Min_Data = 0 and Max_Data = 23 */
