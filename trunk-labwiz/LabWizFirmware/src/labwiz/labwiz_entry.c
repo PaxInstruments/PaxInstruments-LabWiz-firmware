@@ -39,6 +39,7 @@
 /* USER CODE BEGIN Includes */
 
 // Include labwiz related headers here
+#include "labwiz/labwizdefs.h"
 #include "labwiz/labwiz.h"
 /* USER CODE END Includes */
 

@@ -51,6 +51,8 @@ battery_status_e labwiz_get_battery_status(void);
 
 uint16_t labwiz_get_battery_mV(void);
 
+bool labwiz_read(switch_names_e btn);
+
 #endif
 
 //eof

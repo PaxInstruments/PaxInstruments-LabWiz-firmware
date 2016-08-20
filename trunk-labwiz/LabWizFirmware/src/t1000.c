@@ -49,6 +49,8 @@ typedef enum{
 #define BTN_GRAPH           SW_D
 #define BTN_BACKLIGHT       SW_E
 
+#define BTN_SHIFT           SW_D
+
 // Local variables
 // ----------------------------------------------------------------------------
 int m_button_mask = 0;
@@ -306,27 +308,33 @@ void loop()
                 {
                     _t1000_record_stop();
                 }else if(m_message_count==0){
-                    file_result_e result;
-                    result = _t1000_record_start();
-                    switch(result){
-                    case FILE_INIT_ERROR:
+                    if(labwiz_read(BTN_SHIFT))
+                    {
                         m_message_count = 3*(MS_PER_SECOND/PERIODIC_PERIOD_MS);
-                        sprintf(m_message,"InitErr");
-                        break;
-                    case FILE_PATH_ERROR:
-                        m_message_count = 3*(MS_PER_SECOND/PERIODIC_PERIOD_MS);
-                        sprintf(m_message,"Dir Err");
-                        break;
-                    case FILE_OPEN_ERROR:
-                        m_message_count = 3*(MS_PER_SECOND/PERIODIC_PERIOD_MS);
-                        sprintf(m_message,"OpenErr");
-                        break;
-                    case FILE_CARD_NOT_DETECTED:
-                        m_message_count = 3*(MS_PER_SECOND/PERIODIC_PERIOD_MS);
-                        sprintf(m_message,"No SD card");
-                        break;
-                    case FILE_OK: // no break;
-                    default: break;
+                        sprintf(m_message,"AltFunc");
+                    }else{
+                        file_result_e result;
+                        result = _t1000_record_start();
+                        switch(result){
+                        case FILE_INIT_ERROR:
+                            m_message_count = 3*(MS_PER_SECOND/PERIODIC_PERIOD_MS);
+                            sprintf(m_message,"InitErr");
+                            break;
+                        case FILE_PATH_ERROR:
+                            m_message_count = 3*(MS_PER_SECOND/PERIODIC_PERIOD_MS);
+                            sprintf(m_message,"Dir Err");
+                            break;
+                        case FILE_OPEN_ERROR:
+                            m_message_count = 3*(MS_PER_SECOND/PERIODIC_PERIOD_MS);
+                            sprintf(m_message,"OpenErr");
+                            break;
+                        case FILE_CARD_NOT_DETECTED:
+                            m_message_count = 3*(MS_PER_SECOND/PERIODIC_PERIOD_MS);
+                            sprintf(m_message,"No SD card");
+                            break;
+                        case FILE_OK: // no break;
+                        default: break;
+                        }
                     }
                 }
 
@@ -347,9 +355,11 @@ void loop()
             }
             if(m_button_mask&SW_MASK(BTN_GRAPH))
             {
+                #if 0
                 m_current_channel++;
                 if(m_current_channel>SENSOR_COUNT)
                     m_current_channel=0;
+                #endif
                 m_button_mask&=~SW_MASK(BTN_GRAPH);
             }
             if(m_button_mask&SW_MASK(BTN_BACKLIGHT))

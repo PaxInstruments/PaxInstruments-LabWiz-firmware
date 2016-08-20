@@ -264,6 +264,20 @@ uint16_t labwiz_get_battery_mV()
     return (uint16_t)tmp32;
 }
 
+bool labwiz_read(switch_names_e btn)
+{
+    switch(btn){
+    case SW_A: return (!btnA(read()));
+    case SW_B: return (!btnB(read()));
+    case SW_C: return (!btnC(read()));
+    case SW_D: return (!btnD(read()));
+    case SW_E: return (!btnE(read()));
+    case SW_PWR: return (btnPwr(read()));
+    default: break;
+    }
+    return false;
+}
+
 // Private functions
 // ---------------------------------------------------------------------------
 

@@ -118,6 +118,14 @@
 #define portb_9_read_lat()  (READ_LAT(PORTB,9))
 #define portb_9_toggle()    do{TOGGLE(PORTB,9);}while(0)
 
+#define portb_12(func)      portb_12_##func
+#define portb_12_set()      do{SET(PORTB,12);}while(0)
+#define portb_12_clear()    do{CLR(PORTB,12);}while(0)
+#define portb_12_write(V)   do{WRITE(PORTB,12,(V));}while(0)
+#define portb_12_read()     (READ(PORTB,12))
+#define portb_12_read_lat() (READ_LAT(PORTB,12))
+#define portb_12_toggle()   do{TOGGLE(PORTB,12);}while(0)
+
 #define portb_13(func)      portb_13_##func
 #define portb_13_set()      do{SET(PORTB,13);}while(0)
 #define portb_13_clear()    do{CLR(PORTB,13);}while(0)
@@ -126,7 +134,31 @@
 #define portb_13_read_lat() (READ_LAT(PORTB,13))
 #define portb_13_toggle()   do{TOGGLE(PORTB,13);}while(0)
 
+#define portb_15(func)      portb_15_##func
+#define portb_15_set()      do{SET(PORTB,15);}while(0)
+#define portb_15_clear()    do{CLR(PORTB,15);}while(0)
+#define portb_15_write(V)   do{WRITE(PORTB,15,(V));}while(0)
+#define portb_15_read()     (READ(PORTB,15))
+#define portb_15_read_lat() (READ_LAT(PORTB,15))
+#define portb_15_toggle()   do{TOGGLE(PORTB,15);}while(0)
+
 // PortC
+#define portc_6(func)       portc_6_##func
+#define portc_6_set()       do{SET(PORTC,6);}while(0)
+#define portc_6_clear()     do{CLR(PORTC,6);}while(0)
+#define portc_6_write(V)    do{WRITE(PORTC,6,(V));}while(0)
+#define portc_6_read()      (READ(PORTC,6))
+#define portc_6_read_lat()  (READ_LAT(PORTC,6))
+#define portc_6_toggle()    do{TOGGLE(PORTC,6);}while(0)
+
+#define portc_7(func)       portc_7_##func
+#define portc_7_set()       do{SET(PORTC,7);}while(0)
+#define portc_7_clear()     do{CLR(PORTC,7);}while(0)
+#define portc_7_write(V)    do{WRITE(PORTC,7,(V));}while(0)
+#define portc_7_read()      (READ(PORTC,7))
+#define portc_7_read_lat()  (READ_LAT(PORTC,7))
+#define portc_7_toggle()    do{TOGGLE(PORTC,7);}while(0)
+
 #define portc_13(func)      portc_13_##func
 #define portc_13_set()      do{SET(PORTC,13);}while(0)
 #define portc_13_clear()    do{CLR(PORTC,13);}while(0)

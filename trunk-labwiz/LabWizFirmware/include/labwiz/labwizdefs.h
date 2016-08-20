@@ -36,6 +36,12 @@ void setup(void);
 void loop(void);
 
 #define led1(func)          porta_8(func)
+#define btnA(func)          portb_15(func)
+#define btnB(func)          portc_6(func)
+#define btnC(func)          portc_7(func)
+#define btnD(func)          portb_12(func)
+#define btnE(func)          portb_13(func)
+#define btnPwr(func)        porta_0(func)
 
 #endif // End include guard
 
