@@ -33,7 +33,7 @@
 /* Includes ------------------------------------------------------------------*/
 #include "stm32f1xx_hal.h"
 #include "stm32f1xx.h"
-#include "stm32f1xx_it.h"
+#include "labwiz/stm32f1xx_it.h"
 #include "cmsis_os.h"
 
 /* USER CODE BEGIN 0 */

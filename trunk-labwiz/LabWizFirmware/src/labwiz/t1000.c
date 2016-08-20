@@ -4,14 +4,13 @@
  ** August 2016
  **
  ****************************************************************************/
-
+#include "stdlib.h"
 #include "string.h"
 
 #include "labwiz/defs.h"
 #include "labwiz/t1000.h"
-
-#include "labwiz/port.h"
 #include "labwiz/labwiz.h"
+#include "labwiz/drv_usb.h"
 #include "labwiz/drv_lcd.h"
 #include "labwiz/drv_filesystem.h"
 
@@ -42,6 +41,8 @@ typedef enum{
     FS_OPEN_ERROR,
     FS_CARD_NOT_DETECTED,
 }sd_result_e;
+
+#define SW_BACKLIGHT        SW_E
 
 // Local variables
 // ----------------------------------------------------------------------------
@@ -97,13 +98,14 @@ sd_result_e _t1000_record_start(void);
 void _t1000_record_stop(void);
 void _t1000_write_header(void);
 void _t1000_write_log(void);
+void _t1000_draw_battery(int row,int col);
 
 // Public functions
 // ----------------------------------------------------------------------------
 
 void setup()
 {
-    int8_t x,y;
+    int8_t x;
     lcd_blank();
     // Top Row section
     lcd_line(8,0, 8, MAX_COL);
@@ -132,11 +134,11 @@ void setup()
     labwiz_set_btn_callback(_t1000_btn_press);
 
 
-    for(uint8_t x = 0; x < SENSOR_COUNT; x++)
+    for(uint8_t c = 0; c < SENSOR_COUNT; c++)
     {
      for(uint8_t y=0; y < MAXIMUM_GRAPH_POINTS; y++)
      {
-         m_graphdata[x][y] = OUT_OF_RANGE_INT;
+         m_graphdata[c][y] = OUT_OF_RANGE_INT;
      }
     }
 
@@ -186,7 +188,7 @@ void loop()
             lcd_print(m_scratch,10,0);
 
             // Draw battery icon
-            #if 0
+            #if 1
             _t1000_draw_battery(10,127);
             #else
             {
@@ -242,15 +244,15 @@ void loop()
             // Draw axis labels and marks
             for(uint8_t interval = 1; interval < 5; interval++)
             {
-                uint8_t spaces=0,x;
+                uint8_t spaces=0,c;
                 int16_t tmp16;
                 tmp16 = (m_minTempInt/10) + (m_graphScale*interval);
                 // TODO: Write a space string, then over write with number, drrr
                 // Add spaces for right justified
                 spaces = m_axisDigits-_t1000_numlength(tmp16);
                 if(spaces>3) spaces=3;
-                for(x=0;x<spaces;x++)
-                    sprintf(&(m_scratch[x])," ");
+                for(c=0;c<spaces;c++)
+                    sprintf(&(m_scratch[c])," ");
                 sprintf(&(m_scratch[spaces]), "%d", tmp16);
                 lcd_print(m_scratch, 63 - interval*10, 0);
             }
@@ -373,10 +375,10 @@ void loop()
                     m_current_channel=0;
                 m_button_mask&=~SW_MASK(SW_D);
             }
-            if(m_button_mask&SW_MASK(SW_E))
+            if(m_button_mask&SW_MASK(SW_BACKLIGHT))
             {
                 lcd_backlight_toggle();
-                m_button_mask&=~SW_MASK(SW_E);
+                m_button_mask&=~SW_MASK(SW_BACKLIGHT);
             }
         }
 
@@ -575,7 +577,6 @@ char _t1000_current_unit()
 sd_result_e _t1000_record_start()
 {
     uint16_t i = 0,limit=100;
-    uint32_t x,written;
 
     // Make sure we are in a known state
     if(m_logging)
@@ -675,13 +676,15 @@ void _t1000_write_header()
     }
     len += sprintf(&(m_scratch[len]),"\n");
 
+    // TODO: rename
     #if ENABLE_SERIAL_LOGGING
-    result = CDC_Transmit_FS(m_scratch,len);
+    //result = CDC_Transmit_FS(m_scratch,len);
+    result = usb_write((uint8_t*)m_scratch,len);
     nop();
     #endif
 
     #if ENABLE_SD_CARD_LOGGING
-    m_fresult=f_write(&m_log_file_handle, m_scratch, len, &written);
+    m_fresult=f_write(&m_log_file_handle, m_scratch, len, (UINT*)&written);
     if(m_fresult!=FR_OK)
     {
       nop();
@@ -693,8 +696,8 @@ void _t1000_write_header()
 void _t1000_write_log()
 {
     volatile uint8_t result;
-    int x,len;
-    uint32_t written;
+    int x;
+    uint32_t len,written;
     labwiz_time_t tm;
 
     if(m_logging==false) return;
@@ -713,12 +716,13 @@ void _t1000_write_log()
 
     #if ENABLE_SERIAL_LOGGING
     sprintf(&(m_scratch[len-1]),"\n");
-    result = CDC_Transmit_FS(m_scratch,len);
+    //result = CDC_Transmit_FS(m_scratch,len);
+    result = usb_write((uint8_t*)m_scratch,len);
     nop();
     #endif
 
     #if ENABLE_SD_CARD_LOGGING
-    m_fresult=f_write(&m_log_file_handle, m_scratch, len, &written);
+    m_fresult=f_write(&m_log_file_handle, m_scratch, len, (UINT*)&written);
     if(m_fresult!=FR_OK)
     {
       nop();

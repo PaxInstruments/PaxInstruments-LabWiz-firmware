@@ -8,12 +8,16 @@
 #ifndef __DEFS_H__
 #define __DEFS_H__  // Include guard
 
+#include "stdint.h"
 #include "stdbool.h"
 #include "stm32f1xx.h"
+#include "labwiz/port.h"
 
 #define FIRMWARE_VERSION    "0.1"
 
 #pragma GCC diagnostic ignored "-Wunused-but-set-variable"
+#pragma GCC diagnostic ignored "-Wconversion"
+#pragma GCC diagnostic ignored "-Wsign-conversion"
 
 // Intrinsics for the processor
 #ifndef nop

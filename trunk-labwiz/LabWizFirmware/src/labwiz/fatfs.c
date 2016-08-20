@@ -31,7 +31,7 @@
   ******************************************************************************
   */
 
-#include "fatfs.h"
+#include "labwiz/fatfs.h"
 
 uint8_t retSD;    /* Return value for SD */
 char SD_Path[4];  /* SD logical drive path */

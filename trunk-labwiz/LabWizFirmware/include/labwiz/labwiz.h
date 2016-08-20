@@ -1,12 +1,14 @@
 #ifndef __LABWIZ_H__
 #define __LABWIZ_H__
 
-#define SW_A                0
-#define SW_B                1
-#define SW_C                2
-#define SW_D                3
-#define SW_E                4
-#define SW_PWR              5
+typedef enum{
+    SW_A = 0,
+    SW_D,
+    SW_B,
+    SW_C,
+    SW_E,
+    SW_PWR,
+}switch_names_e;
 
 #define SW_MASK(S)          (1<<(S))
 

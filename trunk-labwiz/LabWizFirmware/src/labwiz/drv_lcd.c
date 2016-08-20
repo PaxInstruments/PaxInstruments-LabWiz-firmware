@@ -12,7 +12,6 @@
 #include "labwiz/defs.h"
 #include "labwiz/drv_spi.h"
 #include "labwiz/drv_lcd.h"
-#include "labwiz/port.h"
 #include "labwiz/font5x7.h"
 
 // NOTE: The LCD driver is an ST7567
@@ -231,11 +230,11 @@ void lcd_blank()
 // and the compiler complains about everything.
 #pragma GCC diagnostic ignored "-Wconversion"
 
-void lcd_set_pixel(uint8_t row, uint8_t col)
+void lcd_set_pixel(int row, int col)
 {
     volatile uint8_t i,p;
     //p = (row/LCD_ROWS_PER_PAGE);    // p is the page
-    p = (row>>3); // div by 8
+    p = (uint8_t)(row>>3); // div by 8
     i = (uint8_t)(row-(p*8));       // i is the index in the byte
 
     #ifndef LCD_DOUBLE_BUFFER
@@ -246,11 +245,11 @@ void lcd_set_pixel(uint8_t row, uint8_t col)
 
     return;
 }
-void lcd_clear_pixel(uint8_t row, uint8_t col)
+void lcd_clear_pixel(int row, int col)
 {
     volatile uint8_t i,p;
     //p = (row/LCD_ROWS_PER_PAGE);
-    p = (row>>3);
+    p = (uint8_t)(row>>3);
     i = (uint8_t)(row-(p*8));
     // i is the page index, p is the row in the page
     #ifndef LCD_DOUBLE_BUFFER
@@ -272,7 +271,7 @@ void lcd_clear_pixel(uint8_t row, uint8_t col)
 #define CHAR_HEIGHT 7
 #define FONT        fonttest
 #endif
-void lcd_print(char * st,uint8_t row,uint8_t col)
+void lcd_print(char * st,int row,int col)
 {
     char c;
     uint8_t * ptr;
@@ -282,12 +281,12 @@ void lcd_print(char * st,uint8_t row,uint8_t col)
     while(*st)
     {
         c = *st;
-        pos = col;
+        pos = (uint8_t)col;
         ptr=&(FONT[(c-' ')*CHAR_WIDTH]);
 
         // Draw X bits in this row
-        page = (row>>3);
-        bits = row%8; // We can write this many bits in the current row
+        page = (uint8_t)(row>>3);
+        bits = (uint8_t)(row%8); // We can write this many bits in the current row
         if(bits>0 && page<(LCD_PAGES))
         {
             for(x=0;x<CHAR_WIDTH;x++)
@@ -330,11 +329,11 @@ void lcd_print(char * st,uint8_t row,uint8_t col)
 }
 
 // Found here: http://rosettacode.org/wiki/Bitmap/Bresenham%27s_line_algorithm#C
-void lcd_line(uint8_t r0, uint8_t c0, uint8_t r1, uint8_t c1)
+void lcd_line(int r0, int c0, int r1, int c1)
 {
 
-  int16_t dr = abs(r1-r0), sr = r0<r1 ? 1 : -1;
-  int16_t dc = abs(c1-c0), sc = c0<c1 ? 1 : -1;
+  int16_t dr = (int16_t)abs(r1-r0), sr = r0<r1 ? 1 : -1;
+  int16_t dc = (int16_t)abs(c1-c0), sc = c0<c1 ? 1 : -1;
   int16_t err = (dr>dc ? dr : -dc)>>1, e2;
 
   for(;;)

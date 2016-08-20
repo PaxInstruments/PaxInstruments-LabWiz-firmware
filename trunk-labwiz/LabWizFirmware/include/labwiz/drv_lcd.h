@@ -31,13 +31,13 @@ void lcd_task( void *pvParameters );
 
 void lcd_blank(void);
 
-void lcd_set_pixel(uint8_t row, uint8_t col);
+void lcd_set_pixel(int row, int col);
 
-void lcd_clear_pixel(uint8_t row, uint8_t col);
+void lcd_clear_pixel(int row, int col);
 
-void lcd_print(char * st,uint8_t row,uint8_t col);
+void lcd_print(char * st,int row,int col);
 
-void lcd_line(uint8_t r0, uint8_t c0, uint8_t r1, uint8_t c1);
+void lcd_line(int r0, int c0, int r1, int c1);
 
 void lcd_backlight_toggle(void);
 

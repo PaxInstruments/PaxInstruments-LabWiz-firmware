@@ -9,7 +9,6 @@
 #include "labwiz/labwiz.h"
 
 #include "labwiz/drv_serial.h"
-#include "labwiz/test_task.h"
 #include "labwiz/drv_esp8266.h"
 #include "labwiz/drv_spi.h"
 #include "labwiz/drv_lcd.h"
@@ -19,7 +18,7 @@
 #include "FreeRTOS.h"
 #include "task.h"
 #include "cmsis_os.h"
-#include "fatfs.h"
+#include "labwiz/fatfs.h"
 
 // Definitions and types
 // ----------------------------------------------------------------------------

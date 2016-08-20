@@ -34,11 +34,11 @@
 
 /* Includes ------------------------------------------------------------------*/
 
-#include "usb_device.h"
+#include "labwiz/usb_device.h"
 #include "usbd_core.h"
 #include "usbd_desc.h"
 #include "usbd_cdc.h"
-#include "usbd_cdc_if.h"
+#include "labwiz/usbd_cdc_if.h"
 
 /* USB Device Core handle declaration */
 USBD_HandleTypeDef hUsbDeviceFS;
