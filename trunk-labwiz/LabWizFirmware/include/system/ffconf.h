@@ -1,3 +1,8 @@
+/*
+ * NOTE: This file is required by a third party library and must be in
+ * a path searchable by the compiler and linker
+ */
+
 /*---------------------------------------------------------------------------/
 /  FatFs - FAT file system module configuration file  R0.11 (C)ChaN, 2015
 /---------------------------------------------------------------------------*/

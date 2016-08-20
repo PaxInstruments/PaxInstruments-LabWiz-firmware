@@ -1,4 +1,9 @@
 /*
+ * NOTE: This file is required by a third party library and must be in
+ * a path searchable by the compiler and linker
+ */
+
+/*
     FreeRTOS V8.2.3 - Copyright (C) 2015 Real Time Engineers Ltd.
     All rights reserved
 

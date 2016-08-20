@@ -12,13 +12,12 @@
 #include "labwiz/drv_esp8266.h"
 #include "labwiz/drv_spi.h"
 #include "labwiz/drv_lcd.h"
+#include "labwiz/fatfs.h"
 
 #include "stm32f1xx_hal.h"
-
 #include "FreeRTOS.h"
 #include "task.h"
 #include "cmsis_os.h"
-#include "labwiz/fatfs.h"
 
 // Definitions and types
 // ----------------------------------------------------------------------------

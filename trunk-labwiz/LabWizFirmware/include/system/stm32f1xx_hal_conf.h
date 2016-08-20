@@ -1,3 +1,8 @@
+/*
+ * NOTE: This file is required by a third party library and must be in
+ * a path searchable by the compiler and linker
+ */
+
 /**
   ******************************************************************************
   * @file    stm32f1xx_hal_conf.h
