@@ -13,6 +13,9 @@
 #include "stm32f1xx.h"
 #include "labwiz/port.h"
 
+#include "FreeRTOS.h"
+#include "task.h"
+
 #define LABWIZ_VERSION    "1.0b"
 
 #pragma GCC diagnostic ignored "-Wunused-but-set-variable"

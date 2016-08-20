@@ -1,3 +1,4 @@
+#if 0
 /*****************************************************************************
  **
  ** t1000 related functions.
@@ -740,4 +741,6 @@ void _t1000_draw_battery(int row,int col)
         break;
     }
 }
+
 // eof
+#endif
