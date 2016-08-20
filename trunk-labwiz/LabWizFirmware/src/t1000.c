@@ -662,9 +662,7 @@ void _t1000_write_header()
     }
     len += sprintf(&(m_scratch[len]),"\n");
 
-    // TODO: rename
     #if ENABLE_SERIAL_LOGGING
-    //result = CDC_Transmit_FS(m_scratch,len);
     result = usb_write((uint8_t*)m_scratch,len);
     nop();
     #endif
@@ -702,7 +700,6 @@ void _t1000_write_log()
 
     #if ENABLE_SERIAL_LOGGING
     sprintf(&(m_scratch[len-1]),"\n");
-    //result = CDC_Transmit_FS(m_scratch,len);
     result = usb_write((uint8_t*)m_scratch,len);
     nop();
     #endif

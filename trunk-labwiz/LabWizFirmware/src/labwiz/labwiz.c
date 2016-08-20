@@ -278,6 +278,21 @@ bool labwiz_read(switch_names_e btn)
     return false;
 }
 
+bool labwiz_sleep()
+{
+    // TODO:
+    // if for some reason we can't enter sleep, return false
+
+    // Need to stop all interrupts, including the FreeRTOS systick
+
+    // Enter sleep
+
+    // Re-enable all the interrupts
+
+    // return true that we have slept
+    return true;
+}
+
 // Private functions
 // ---------------------------------------------------------------------------
 

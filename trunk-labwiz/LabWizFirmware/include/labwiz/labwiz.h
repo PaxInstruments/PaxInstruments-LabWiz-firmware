@@ -53,6 +53,8 @@ uint16_t labwiz_get_battery_mV(void);
 
 bool labwiz_read(switch_names_e btn);
 
+bool labwiz_sleep(void);
+
 #endif
 
 //eof
