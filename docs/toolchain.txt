@@ -85,7 +85,22 @@ sudo udevadm control --reload-rules
 # http://gnuarmeclipse.github.io/qemu/install/
 
 # Download the most recent version from https://github.com/gnuarmeclipse/qemu/releases
-wget -c https://github.com/gnuarmeclipse/qemu/releases/download/gae-2.6.0-20160728/gnuarmeclipse-qemu-debian64-2.6.0-201607280535.tgz
+wget -c .global _Reset
+_Reset:
+ LDR sp, =stack_top
+ BL c_entry
+ B .ENTRY(_Reset)
+SECTIONS
+{
+ . = 0x10000;
+ .startup . : { startup.o(.text) }
+ .text : { *(.text) }
+ .data : { *(.data) }
+ .bss : { *(.bss COMMON) }
+ . = ALIGN(8);
+ . = . + 0x1000; /* 4kB of stack memory */
+ stack_top = .;
+}gnuarmeclipse-qemu-debian64-2.6.0-201607280535.tgz
 
 # Install qemu
 sudo tar xvf ~/Downloads/armToolchainDownloads/gnuarmeclipse-qemu-debian64-2.6.0-201607280535.tgz -C /opt/gnuarmeclipse/
@@ -168,3 +183,5 @@ sudo tar xvf ~/Downloads/armToolchainDownloads/gnuarmeclipse-qemu-debian64-2.6.0
 
 # Set up the packs manager and install the STM32F4 pack on the Boards tab. See http://gnuarmeclipse.github.io/plugins/packs-manager/
 
+# To connect openocd to LabWiz use
+# -f interface/stlink-v2.cfg -f target/stm32f1x.cfg
