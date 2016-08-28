@@ -38,7 +38,7 @@
 void setup(void);
 void loop(void);
 
-#define led1(func)          porta_8(func)
+#define led1(func)          portc_1(func)
 #define btnA(func)          portb_15(func)
 #define btnB(func)          portc_6(func)
 #define btnC(func)          portc_7(func)

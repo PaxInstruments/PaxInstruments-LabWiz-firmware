@@ -143,6 +143,14 @@
 #define portb_15_toggle()   do{TOGGLE(PORTB,15);}while(0)
 
 // PortC
+#define portc_1(func)       portc_1_##func
+#define portc_1_set()       do{SET(PORTC,1);}while(0)
+#define portc_1_clear()     do{CLR(PORTC,1);}while(0)
+#define portc_1_write(V)    do{WRITE(PORTC,1,(V));}while(0)
+#define portc_1_read()      (READ(PORTC,1))
+#define portc_1_read_lat()  (READ_LAT(PORTC,1))
+#define portc_1_toggle()    do{TOGGLE(PORTC,1);}while(0)
+
 #define portc_6(func)       portc_6_##func
 #define portc_6_set()       do{SET(PORTC,6);}while(0)
 #define portc_6_clear()     do{CLR(PORTC,6);}while(0)
