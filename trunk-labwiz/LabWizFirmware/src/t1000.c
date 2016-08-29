@@ -308,11 +308,12 @@ void loop()
                 {
                     _t1000_record_stop();
                 }else if(m_message_count==0){
-                    if(labwiz_read(BTN_SHIFT))
+                    //if(labwiz_read(BTN_SHIFT))
+                    //{
+                    //    m_message_count = 3*(MS_PER_SECOND/PERIODIC_PERIOD_MS);
+                    //    sprintf(m_message,"AltFunc");
+                    //}else
                     {
-                        m_message_count = 3*(MS_PER_SECOND/PERIODIC_PERIOD_MS);
-                        sprintf(m_message,"AltFunc");
-                    }else{
                         file_result_e result;
                         result = _t1000_record_start();
                         switch(result){

@@ -11,6 +11,8 @@
 
 #include "sin_lut.h"
 
+#define led1 mod1_gpio1
+
 // Definitions and types
 // ----------------------------------------------------------------------------
 #define STATE_INIT          0
@@ -96,7 +98,7 @@ void loop()
             labwiz_time_t tm;
 
             m_last_tick = current_tick;
-           led1(toggle());
+            led1(toggle());
 
             labwiz_get_time(&tm);
 

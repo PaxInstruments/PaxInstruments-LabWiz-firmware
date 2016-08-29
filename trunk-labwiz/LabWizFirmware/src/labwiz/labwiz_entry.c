@@ -526,7 +526,7 @@ static void MX_GPIO_Init(void)
 
   /*Configure GPIO pins : MOD3_GPIO1_Pin MOD2_GPIO1_Pin MOD1_GPIO1_Pin MOD4_GPIO0_Pin */
   GPIO_InitStruct.Pin = MOD3_GPIO1_Pin|MOD2_GPIO1_Pin|MOD1_GPIO1_Pin|MOD4_GPIO0_Pin;
-  GPIO_InitStruct.Mode = GPIO_MODE_ANALOG;
+  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
 
   /*Configure GPIO pin : MOD2_GPIO0_Pin */
@@ -541,13 +541,13 @@ static void MX_GPIO_Init(void)
 
   /*Configure GPIO pin : SW_E_BOOT1_Pin */
   GPIO_InitStruct.Pin = SW_E_BOOT1_Pin;
-  GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING;
+  GPIO_InitStruct.Mode = GPIO_MODE_IT_FALLING;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(SW_E_BOOT1_GPIO_Port, &GPIO_InitStruct);
 
   /*Configure GPIO pins : SW_C_Pin SW_B_Pin SW_A_Pin */
   GPIO_InitStruct.Pin = SW_C_Pin|SW_B_Pin|SW_A_Pin;
-  GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING;
+  GPIO_InitStruct.Mode = GPIO_MODE_IT_FALLING;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
 
