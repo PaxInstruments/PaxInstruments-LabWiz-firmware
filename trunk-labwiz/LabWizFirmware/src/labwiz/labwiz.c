@@ -62,6 +62,7 @@ void _labwiz_periodic_task( void *pvParameters );
 void _labwiz_isr_task( void *pvParameters );
 void _labwiz_app_task( void *pvParameters );
 void EXTI0_IRQHandler(void);
+void EXTI2_IRQHandler(void);
 void EXTI9_5_IRQHandler(void);
 void EXTI15_10_IRQHandler(void);
 void _exti_ISR(void);
@@ -412,6 +413,7 @@ __weak void loop()
 
 
 void EXTI0_IRQHandler(void){_exti_ISR();}
+void EXTI2_IRQHandler(void){_exti_ISR();}
 void EXTI9_5_IRQHandler(void){_exti_ISR();}
 void EXTI15_10_IRQHandler(void){_exti_ISR();}
 void _exti_ISR(void)

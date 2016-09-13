@@ -51,6 +51,8 @@ typedef enum{
 
 #define BTN_SHIFT           SW_D
 
+#define led1(func)          port_none(func)
+
 // Local variables
 // ----------------------------------------------------------------------------
 int m_button_mask = 0;
@@ -356,7 +358,7 @@ void loop()
             }
             if(m_button_mask&SW_MASK(BTN_GRAPH))
             {
-                #if 0
+                #if 1
                 m_current_channel++;
                 if(m_current_channel>SENSOR_COUNT)
                     m_current_channel=0;
