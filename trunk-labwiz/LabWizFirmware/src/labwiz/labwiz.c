@@ -23,11 +23,11 @@
 // ----------------------------------------------------------------------------
 #define DEBUG   1
 
-#define SW_A_EXTI           15
-#define SW_B_EXTI           6
+#define SW_A_EXTI           11
+#define SW_B_EXTI           10
 #define SW_C_EXTI           7
-#define SW_D_EXTI           12
-#define SW_E_EXTI           13
+#define SW_D_EXTI           8
+#define SW_E_EXTI           2
 #define SW_PWR_EXTI         0
 
 #define SW_A_EXTI_MASK      (1<<(SW_A_EXTI))
@@ -62,12 +62,14 @@ void _labwiz_periodic_task( void *pvParameters );
 void _labwiz_isr_task( void *pvParameters );
 void _labwiz_app_task( void *pvParameters );
 void EXTI0_IRQHandler(void);
+void EXTI2_IRQHandler(void);
 void EXTI9_5_IRQHandler(void);
 void EXTI15_10_IRQHandler(void);
 void _exti_ISR(void);
 void WWDG_IRQHandler(void);
 void ADC1_2_IRQHandler(void);
 void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* hadc);
+
 
 // Public functions
 // ----------------------------------------------------------------------------
@@ -95,12 +97,22 @@ void labwiz_init()
 
 
     // Enable the External interrupts 10-15 global interrupt
+    // EXTI10,11 are SW_B,SW_A
     HAL_NVIC_SetPriority(EXTI15_10_IRQn, 8, 0);
     HAL_NVIC_EnableIRQ(EXTI15_10_IRQn);
+
+    // EXTI2 = SW_E
+    HAL_NVIC_SetPriority(EXTI2_IRQn, 8, 0);
+    HAL_NVIC_EnableIRQ(EXTI2_IRQn);
+
+    // EXTI7,8 are SW_C,SW_8
     HAL_NVIC_SetPriority(EXTI9_5_IRQn, 8, 0);
     HAL_NVIC_EnableIRQ(EXTI9_5_IRQn);
-    HAL_NVIC_SetPriority(EXTI0_IRQn, 8, 0);
-    HAL_NVIC_EnableIRQ(EXTI0_IRQn);
+
+    // PWR switch?
+    //HAL_NVIC_SetPriority(EXTI0_IRQn, 8, 0);
+    //HAL_NVIC_EnableIRQ(EXTI0_IRQn);
+
     HAL_NVIC_SetPriority(ADC1_2_IRQn, 8, 0);
     HAL_NVIC_EnableIRQ(ADC1_2_IRQn);
 
@@ -270,7 +282,7 @@ bool labwiz_read(switch_names_e btn)
     case SW_A: return (!btnA(read()));
     case SW_B: return (!btnB(read()));
     case SW_C: return (!btnC(read()));
-    case SW_D: return (!btnD(read()));
+    case SW_D: return (btnD(read()));
     case SW_E: return (!btnE(read()));
     case SW_PWR: return (btnPwr(read()));
     default: break;
@@ -401,6 +413,7 @@ __weak void loop()
 
 
 void EXTI0_IRQHandler(void){_exti_ISR();}
+void EXTI2_IRQHandler(void){_exti_ISR();}
 void EXTI9_5_IRQHandler(void){_exti_ISR();}
 void EXTI15_10_IRQHandler(void){_exti_ISR();}
 void _exti_ISR(void)

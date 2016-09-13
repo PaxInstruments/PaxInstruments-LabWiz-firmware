@@ -51,6 +51,8 @@ typedef enum{
 
 #define BTN_SHIFT           SW_D
 
+#define led1(func)          port_none(func)
+
 // Local variables
 // ----------------------------------------------------------------------------
 int m_button_mask = 0;
@@ -308,11 +310,12 @@ void loop()
                 {
                     _t1000_record_stop();
                 }else if(m_message_count==0){
-                    if(labwiz_read(BTN_SHIFT))
+                    //if(labwiz_read(BTN_SHIFT))
+                    //{
+                    //    m_message_count = 3*(MS_PER_SECOND/PERIODIC_PERIOD_MS);
+                    //    sprintf(m_message,"AltFunc");
+                    //}else
                     {
-                        m_message_count = 3*(MS_PER_SECOND/PERIODIC_PERIOD_MS);
-                        sprintf(m_message,"AltFunc");
-                    }else{
                         file_result_e result;
                         result = _t1000_record_start();
                         switch(result){
@@ -355,7 +358,7 @@ void loop()
             }
             if(m_button_mask&SW_MASK(BTN_GRAPH))
             {
-                #if 0
+                #if 1
                 m_current_channel++;
                 if(m_current_channel>SENSOR_COUNT)
                     m_current_channel=0;
