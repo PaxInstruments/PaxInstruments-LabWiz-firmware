@@ -11,6 +11,7 @@
 #include "labwiz/drv_serial.h"
 #include "labwiz/drv_esp8266.h"
 #include "labwiz/drv_spi.h"
+#include "labwiz/drv_i2c.h"
 #include "labwiz/drv_lcd.h"
 #include "labwiz/fatfs.h"
 
@@ -80,6 +81,7 @@ void labwiz_init()
     drv_uart_init();
     drv_esp8266_init();
     drv_spi_init();
+    drv_i2c_init();
     lcd_init();
 
     m_exti_mask = 0;
