@@ -12,7 +12,9 @@
 #include "labwiz/drv_esp8266.h"
 #include "labwiz/drv_spi.h"
 #include "labwiz/drv_i2c.h"
+
 #include "labwiz/drv_lcd.h"
+
 #include "labwiz/fatfs.h"
 
 #include "stm32f1xx_hal.h"
@@ -82,7 +84,9 @@ void labwiz_init()
     drv_esp8266_init();
     drv_spi_init();
     drv_i2c_init();
+
     lcd_init();
+    mcp3424_init();
 
     m_exti_mask = 0;
     vSemaphoreCreateBinary(m_labwiz_isr_semaphore);

@@ -40,6 +40,13 @@ bool drv_i2c1_busy()
     return (hi2c1.State == HAL_I2C_STATE_BUSY);
 }
 
+I2C_HandleTypeDef * i2c_get_bus_handle(int i2c_bus)
+{
+    if(i2c_bus==I2C_BUS_1) return &hi2c1;
+    if(i2c_bus==I2C_BUS_2) return &hi2c2;
+    return NULL;
+}
+
 #if 0
 // We could do this too?
 HAL_I2C_IsDeviceReady()
@@ -101,7 +108,7 @@ bool drv_i2c1_ready()
     return (hi2c1.State == HAL_I2C_STATE_READY);
 }
 
-void drv_i2c1_write(uint16_t DevAddress, uint8_t *pData, uint16_t Size)
+HAL_StatusTypeDef drv_i2c1_write(uint16_t DevAddress, uint8_t *pData, uint16_t Size)
 {
     HAL_StatusTypeDef ret;
 
@@ -122,9 +129,9 @@ void drv_i2c1_write(uint16_t DevAddress, uint8_t *pData, uint16_t Size)
         break;
     }
 
-    return;
+    return ret;
 }
-void drv_i2c1_read(uint16_t DevAddress, uint8_t *pData, uint16_t Size)
+HAL_StatusTypeDef drv_i2c1_read(uint16_t DevAddress, uint8_t *pData, uint16_t Size)
 {
     HAL_StatusTypeDef ret;
 
@@ -145,7 +152,7 @@ void drv_i2c1_read(uint16_t DevAddress, uint8_t *pData, uint16_t Size)
         break;
     }
 
-    return;
+    return ret;
 }
 
 // eof
