@@ -49,6 +49,8 @@ void lcd_get_screen(lcd_screen_t * screen);
 
 void lcd_set_screen(lcd_screen_t * screen);
 
+char lcd_spinner();
+
 #endif
 
 //eof

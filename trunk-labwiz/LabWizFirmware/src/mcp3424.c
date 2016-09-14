@@ -85,7 +85,8 @@ void mcp3424_poll()
     uint8_t config;
     mcp_config_t * config_ptr;
     config_ptr = (mcp_config_t*)&config;
-    config = _mcp3424_read_config();
+
+    //config = _mcp3424_read_config();
 
     nop();
 

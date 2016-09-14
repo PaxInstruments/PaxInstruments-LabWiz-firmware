@@ -16,7 +16,7 @@
 #define STATE_INIT          0
 #define STATE_OPERATING     1
 
-#define PERIOD_MS           1000
+#define PERIOD_MS           250
 
 #define led1    port_none
 
@@ -87,6 +87,9 @@ void loop()
             led1(toggle());
 
             lcd_set_screen(&m_testscreen);
+
+            sprintf(m_scratch,"%c",lcd_spinner());
+            lcd_print(m_scratch,0,60);
 
             sprintf(m_scratch,"Testing");
             lcd_print(m_scratch,0,0);
