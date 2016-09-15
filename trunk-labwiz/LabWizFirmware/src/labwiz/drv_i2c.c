@@ -112,6 +112,10 @@ HAL_StatusTypeDef drv_i2c1_write(uint16_t DevAddress, uint8_t *pData, uint16_t S
 {
     HAL_StatusTypeDef ret;
 
+    // Check if busy
+    //if(__HAL_I2C_GET_FLAG(&hi2c1, I2C_FLAG_BUSY) != RESET)
+    //    return HAL_BUSY;
+    // Not busy, do things
     ret = HAL_I2C_Master_Transmit(&hi2c1, DevAddress, pData, Size, HAL_MAX_DELAY);
     switch(ret){
     case HAL_OK:
@@ -135,6 +139,10 @@ HAL_StatusTypeDef drv_i2c1_read(uint16_t DevAddress, uint8_t *pData, uint16_t Si
 {
     HAL_StatusTypeDef ret;
 
+    // Check if busy
+    //if(__HAL_I2C_GET_FLAG(&hi2c1, I2C_FLAG_BUSY) != RESET)
+    //    return HAL_BUSY;
+    // Not busy, do things
     ret = HAL_I2C_Master_Receive(&hi2c1, DevAddress, pData, Size, HAL_MAX_DELAY);
     switch(ret){
     case HAL_OK:

@@ -221,8 +221,8 @@
   * @{
   */
 #define I2C_TIMEOUT_FLAG          ((uint32_t)35)     /*!< Timeout 35 ms */
-#define I2C_TIMEOUT_ADDR_SLAVE    ((uint32_t)1000)  /*!< Timeout 1 s  */
-#define I2C_TIMEOUT_BUSY_FLAG     ((uint32_t)1000)  /*!< Timeout 1 s  */
+#define I2C_TIMEOUT_ADDR_SLAVE    ((uint32_t)100)  /*!< Timeout 50 ms  */
+#define I2C_TIMEOUT_BUSY_FLAG     ((uint32_t)100)  /*!< Timeout 50 ms  */
 /**
   * @}
   */ 

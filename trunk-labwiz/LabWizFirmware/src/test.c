@@ -10,6 +10,8 @@
 #include "labwiz/drv_lcd.h"
 
 #include "mcp3424.h"
+#include "mcp9800.h"
+#include "thermocouples.h"
 
 // Definitions and types
 // ----------------------------------------------------------------------------
@@ -46,9 +48,12 @@ void setup()
     // Get button presses
     labwiz_set_btn_callback(_test_btn_press);
 
-    // Setup MCP3424
-    mcp3424_init(I2C_BUS_1,0);
+    // Thermocouple setup
+    thrm_init();
 
+    // Setup MCP9800 for ambient
+    mcp9800_init(I2C_BUS_1,0);
+    mcp9800_configure(MCP9800_12BIT);
 
     // Setup LCD screen
     lcd_blank();
@@ -65,12 +70,11 @@ char m_scratch[30];
 void loop()
 {
 
-    // This does all the MCP processing
-    mcp3424_poll();
+    thrm_poll();
 
     switch(m_state){
     case STATE_INIT:
-        vTaskDelay(portTICK_PERIOD_MS*2000);
+        vTaskDelay(portTICK_PERIOD_MS*1000);
         m_state = STATE_OPERATING;
         break;
     case STATE_OPERATING:
@@ -86,6 +90,8 @@ void loop()
             m_last_tick = current_tick;
             led1(toggle());
 
+            mcp9800_update();
+
             lcd_set_screen(&m_testscreen);
 
             sprintf(m_scratch,"%c",lcd_spinner());
@@ -95,8 +101,19 @@ void loop()
             lcd_print(m_scratch,0,0);
             for(x=0;x<4;x++)
             {
-                sprintf(m_scratch,"Ch %d:x%04X",x,(unsigned int)mcp3424_get_channel(x));
+                int temp;
+                temp = thrm_get_temperature(x+1);
+                if(temp<3000000)
+                    sprintf(m_scratch,"Ch %d:%duV",x,temp);
+                else
+                    sprintf(m_scratch,"Ch %d: N/A",x);
                 lcd_print(m_scratch,(x*10)+10,0);
+            }
+            {
+                int temp=mcp9800_get_temperature();
+                thrm_set_ambient(temp);
+                sprintf(m_scratch,"Ambient:%d.%d",temp/10,temp%10);
+                lcd_print(m_scratch,50,0);
             }
 
             lcd_latch();

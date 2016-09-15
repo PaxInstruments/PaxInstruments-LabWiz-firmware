@@ -38,7 +38,7 @@ void mcp3424_configure(mcp_format_e format, mcp_gain_e gain);
 
 void mcp3424_poll(void);
 
-uint32_t mcp3424_get_channel(int channel);
+int32_t mcp3424_get_channel(int channel);
 
 #endif
 #endif

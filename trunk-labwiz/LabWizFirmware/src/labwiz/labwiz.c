@@ -86,7 +86,6 @@ void labwiz_init()
     drv_i2c_init();
 
     lcd_init();
-    mcp3424_init();
 
     m_exti_mask = 0;
     vSemaphoreCreateBinary(m_labwiz_isr_semaphore);
