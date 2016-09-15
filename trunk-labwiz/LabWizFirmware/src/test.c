@@ -1,4 +1,4 @@
-#if 1
+#if 0
 /*****************************************************************************
  **
  ** Test application
@@ -103,8 +103,8 @@ void loop()
             {
                 int temp;
                 temp = thrm_get_temperature(x+1);
-                if(temp<3000000)
-                    sprintf(m_scratch,"Ch %d:%duV",x,temp);
+                if(temp<THRM_OUT_OF_RANGE)
+                    sprintf(m_scratch,"Ch %d:%d.%d C",x,temp/100,temp%100);
                 else
                     sprintf(m_scratch,"Ch %d: N/A",x);
                 lcd_print(m_scratch,(x*10)+10,0);
