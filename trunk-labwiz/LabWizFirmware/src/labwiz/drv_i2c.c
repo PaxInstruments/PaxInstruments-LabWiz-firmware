@@ -35,11 +35,6 @@ void drv_i2c_init()
     return;
 }
 
-bool drv_i2c1_busy()
-{
-    return (hi2c1.State == HAL_I2C_STATE_BUSY);
-}
-
 I2C_HandleTypeDef * i2c_get_bus_handle(int i2c_bus)
 {
     if(i2c_bus==I2C_BUS_1) return &hi2c1;
@@ -103,6 +98,13 @@ bool drv_i2c1_device_connected()
 }
 #endif
 
+// I2C 1 functions
+////////////////////////////
+bool drv_i2c1_busy()
+{
+    return (hi2c1.State == HAL_I2C_STATE_BUSY);
+}
+
 bool drv_i2c1_ready()
 {
     return (hi2c1.State == HAL_I2C_STATE_READY);
@@ -162,5 +164,73 @@ HAL_StatusTypeDef drv_i2c1_read(uint16_t DevAddress, uint8_t *pData, uint16_t Si
 
     return ret;
 }
+
+// I2C 2 functions
+////////////////////////////
+bool drv_i2c2_busy()
+{
+    return (hi2c1.State == HAL_I2C_STATE_BUSY);
+}
+
+bool drv_i2c2_ready()
+{
+    return (hi2c2.State == HAL_I2C_STATE_READY);
+}
+
+HAL_StatusTypeDef drv_i2c2_write(uint16_t DevAddress, uint8_t *pData, uint16_t Size)
+{
+    HAL_StatusTypeDef ret;
+
+    // Check if busy
+    //if(__HAL_I2C_GET_FLAG(&hi2c1, I2C_FLAG_BUSY) != RESET)
+    //    return HAL_BUSY;
+    // Not busy, do things
+    ret = HAL_I2C_Master_Transmit(&hi2c2, DevAddress, pData, Size, HAL_MAX_DELAY);
+    switch(ret){
+    case HAL_OK:
+        nop();
+        break;
+    case HAL_ERROR:
+        nop();
+        break;
+    case HAL_BUSY:
+        nop();
+        break;
+    case HAL_TIMEOUT:
+    default:
+        nop();
+        break;
+    }
+
+    return ret;
+}
+HAL_StatusTypeDef drv_i2c2_read(uint16_t DevAddress, uint8_t *pData, uint16_t Size)
+{
+    HAL_StatusTypeDef ret;
+
+    // Check if busy
+    //if(__HAL_I2C_GET_FLAG(&hi2c1, I2C_FLAG_BUSY) != RESET)
+    //    return HAL_BUSY;
+    // Not busy, do things
+    ret = HAL_I2C_Master_Receive(&hi2c2, DevAddress, pData, Size, HAL_MAX_DELAY);
+    switch(ret){
+    case HAL_OK:
+        nop();
+        break;
+    case HAL_ERROR:
+        nop();
+        break;
+    case HAL_BUSY:
+        nop();
+        break;
+    case HAL_TIMEOUT:
+    default:
+        nop();
+        break;
+    }
+
+    return ret;
+}
+
 
 // eof
