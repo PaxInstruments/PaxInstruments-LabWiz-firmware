@@ -6,7 +6,7 @@
  ** This module provides functions related to thermocouples
  **
  ****************************************************************************/
-
+#if 0
 #ifndef __THERMOCOUPLES_PRIVATE_H__
 #define __THERMOCOUPLES_PRIVATE_H__
 
@@ -205,6 +205,7 @@ int tempTypK[TEMP_TYPE_K_LENGTH] =
 61277,//,54819, // 1370 i=164
 };
 
+#endif
 #endif
 
 //eof

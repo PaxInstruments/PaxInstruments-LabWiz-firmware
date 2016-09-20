@@ -10,7 +10,7 @@
 #ifndef __THERMOCOUPLES_H__
 #define __THERMOCOUPLES_H__
 
-#define THRM_OUT_OF_RANGE       320000
+#define THRM_OUT_OF_RANGE       15000
 
 void thrm_init(void);
 

@@ -114,7 +114,29 @@ void _t1000_draw_battery(int row,int col);
 
 // Public functions
 // ----------------------------------------------------------------------------
+void create_display_background(int num_digits)
+{
+    int x;
+    lcd_blank();
+    // Top Row section
+    lcd_line(8,0, 8, MAX_COL);
+    for(x=0;x<4;x++)
+        lcd_line(0, (uint8_t)(x*33),7,(uint8_t)(x*33));
+    lcd_line(0, 131,7,131);
+    // Status bar
+    lcd_line(18, 0,18,131);
+    // Side bar
+    if(num_digits>3)
+        lcd_line(19, 18+7,MAX_ROW,18+7);
+    else
+        lcd_line(19, 18,MAX_ROW,18);
+    // Tick marks
+    for(x=1;x<5;x++)
+        lcd_set_pixel((uint8_t)((x*10)+15),17);
 
+    lcd_get_screen(&lcd_screen1);
+    return;
+}
 void setup()
 {
     int8_t x;
@@ -126,21 +148,8 @@ void setup()
     mcp9800_init(I2C_BUS_1,0);
     mcp9800_configure(MCP9800_12BIT);
 
-    lcd_blank();
-    // Top Row section
-    lcd_line(8,0, 8, MAX_COL);
-    for(x=0;x<4;x++)
-        lcd_line(0, (uint8_t)(x*33),7,(uint8_t)(x*33));
-    lcd_line(0, 131,7,131);
-    // Status bar
-    lcd_line(18, 0,18,131);
-    // Side bar
-    lcd_line(19, 18,MAX_ROW,18);
-    // Tick marks
-    for(x=1;x<5;x++)
-        lcd_set_pixel((uint8_t)((x*10)+15),17);
-
-    lcd_get_screen(&lcd_screen1);
+    // Create the background we are going to draw
+    create_display_background(3);
 
     lcd_blank();
     labwiz_set_btn_callback(_t1000_btn_press);
@@ -171,6 +180,8 @@ void loop()
     case STATE_INIT:
         vTaskDelay(portTICK_PERIOD_MS*1000);
         m_state = STATE_OPERATING;
+        // TODO: Check to see if the I2C busses are all good.
+
         lcd_set_screen(&lcd_screen1);
         break;
     default:
@@ -280,7 +291,7 @@ void loop()
 
                 // if the sensor is out of range, don't show it. If we are showing one
                 // channel, ignore the others
-                if(m_graphdata[channel][m_graphdata_index] >= (THRM_OUT_OF_RANGE/10) ||
+                if(m_graphdata[channel][m_graphdata_index] >= THRM_OUT_OF_RANGE ||
                     (channel != m_current_channel && m_current_channel < 4) )
                 {
                   continue;
@@ -466,6 +477,7 @@ void _t1000_updateGraphScaling()
   if(m_axisDigits!=old_axisdigits)
   {
       // TODO: Redraw the display
+      create_display_background(m_axisDigits);
   }
 
   return;
@@ -506,6 +518,7 @@ uint8_t _t1000_temperature_to_pixel(int16_t temp)
     p = (uint16_t)(60-p);
     return (uint8_t)p;
 }
+
 void _t1000_fake_data()
 {
     // DEBUG: Fake some data
@@ -538,7 +551,7 @@ void _t1000_fake_data()
     val += ADD;
     #endif
 
-    #if 1
+    #if 0
     static int16_t val=300;
     static int16_t step=5;
     m_graphdata[0][m_graphdata_index] = val;
@@ -572,7 +585,7 @@ char * _t1000_printtemp(char * buf, int16_t temp)
     uint8_t tmp8;
     tmp8 = (uint8_t)abs(temp%10);
     if(temp>9999)
-        sprintf(buf,"%d.%d",((temp)/10),tmp8);
+        sprintf(buf,"%d",((temp)/10));
     else
         sprintf(buf,"%3d.%d",((temp)/10),tmp8);
     return buf;

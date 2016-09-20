@@ -11,6 +11,7 @@
 #include "mcp3424.h"
 #include "thermocouples.h"
 #include "thermocouples_private.h"
+#include "thermocouples_LUT.h"
 
 
 // Definitions and externs
@@ -73,12 +74,16 @@ int thrm_get_temperature(int channel)
         int uvolts,celcius;
         uvolts = adc_value*101;
 
-        uvolts = uvolts + m_ambient_uvolts;
-
+#if 0
         // This gets us to 1/100ths of a deg C, div by 10 to get 1/10ths
+        uvolts = uvolts + m_ambient_uvolts;
         celcius = _thrm_uvolt_to_cel(uvolts);
         tempval = celcius/10;
-
+#elif 1
+        tempval = thrmMicroVoltsToC(uvolts, m_ambient_uvolts);
+#else
+        tempval = uvolts;
+#endif
         //tempval = uvolts;
         // This is milivolts
         //tempval = uvolts/1000;
@@ -95,7 +100,8 @@ void thrm_set_ambient(int ambient)
 {
     int32_t ambient_uvolts;
 
-    ambient_uvolts = _thrm_cel_to_uvolt(ambient);
+    ambient_uvolts = thrmCToMicroVolts(ambient);
+    //ambient_uvolts = _thrm_cel_to_uvolt(ambient);
 
     m_ambient_uvolts = ambient_uvolts;
     return;
@@ -105,7 +111,7 @@ void thrm_set_ambient(int ambient)
 // Private functions
 // ---------------------------------------------------------------------------
 
-
+#if 0
 // This is a lookup from temperature to microvolts
 int32_t _thrm_cel_to_uvolt(int32_t celcius)
 {
@@ -218,5 +224,6 @@ int32_t _thrm_uvolt_to_cel(int32_t microVolts)
 
   return interpolated_temp_value;
 }
+#endif
 
 // eof

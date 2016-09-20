@@ -101,6 +101,13 @@ int main(void)
 
   /* USER CODE BEGIN 1 */
   //__disable_irq();
+  // Reset I2C as suggested at:
+  // https://my.st.com/public/STe2ecommunities/mcu/Lists/cortex_mx_stm32/Flat.aspx?RootFolder=https%3a%2f%2fmy%2est%2ecom%2fpublic%2fSTe2ecommunities%2fmcu%2fLists%2fcortex_mx_stm32%2fSTM32L151RB%20I2C%20Busy%20flag%20always%20set&FolderCTID=0x01200200770978C69A1141439FE559EB459D7580009C4E14902C3CDE46A77F0FFD06506F5B&currentviews=3805
+  I2C1->CR1 |= 0x8000;
+  I2C1->CR1 &= (uint16_t) ~((uint16_t) 0x8000);
+  I2C2->CR1 |= 0x8000;
+  I2C2->CR1 &= (uint16_t) ~((uint16_t) 0x8000);
+
   /* USER CODE END 1 */
 
   /* MCU Configuration----------------------------------------------------------*/
@@ -517,6 +524,12 @@ static void MX_GPIO_Init(void)
 
   /*Configure GPIO pin Output Level */
   HAL_GPIO_WritePin(LCD_BL_GPIO_Port, LCD_BL_Pin, GPIO_PIN_RESET);
+
+/*Configure I2C pins as open drain: PortB 6 & 7 */
+GPIO_InitStruct.Pin = GPIO_PIN_7|GPIO_PIN_6;
+GPIO_InitStruct.Mode = GPIO_MODE_AF_OD;
+GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
 
   /*Configure GPIO pins : LCD_RST_Pin LCD_A0_Pin PC1_Pin WIFI_EN_Pin */
   GPIO_InitStruct.Pin = LCD_RST_Pin|LCD_A0_Pin|PC1_Pin|WIFI_EN_Pin;
