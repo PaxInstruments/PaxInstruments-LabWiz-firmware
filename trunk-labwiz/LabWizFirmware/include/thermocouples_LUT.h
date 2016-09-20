@@ -4,18 +4,28 @@
 #define _THRM_LUT_H_
 
 typedef struct {
-    uint32_t temperature;
-    uint32_t microvolts;
+    int32_t temperature;
+    int32_t microvolts;
 } thrm_lookup_t;
 
-#define TEMP_OFFSET     2700     // This is the offset for kelvin, to c, subtract this from temp to get C
+/**
+ * Returns temperature as a function of the measured thermocouple voltage.
+ *
+ * int32_t microvoltsMeasured - Microvolts from 0v +/-
+ *
+ * Return: int32_t of the temperature in C in 1/10ths of a deg C
+ *
+  **/
+int32_t thrmMicroVoltsToC(int32_t microvoltsMeasured);
 
 /**
- * Returns temperature in 1/10ths kelvin as a function of the ambient temperature and the measured
- * thermocouple voltage.
+ * Return the microvolts of a given temperature
+ *
+ * int32_t measured_temp - Temperature in 1/10ths of deg C
+ *
+ * Return: uint32_t of the microvolts for the temperature from 0v +/-
+ *
  **/
-int32_t thrmMicroVoltsToC(uint32_t microvoltsMeasured, uint32_t ambient_uvolts);
-
-uint32_t thrmCToMicroVolts(int32_t measured_temp);
+int32_t thrmCToMicroVolts(int32_t measured_temp);
 
 #endif

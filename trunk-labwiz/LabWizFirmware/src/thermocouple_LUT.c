@@ -5,10 +5,11 @@
 
 
 #define UVOLT_OFFSET    6458    // This is the offset for kelvin, to c, subtract this from uV to get 0C
+#define TEMP_OFFSET     2700     // This is the offset for kelvin, to c, subtract this from temp to get C
 
-#define POINTS_COUNT    150
+#define POINTS_COUNT    148
 
-// These are temperatures from abs_zero and the corresponding  microvolts
+// These are temperatures from abs_zero and the corresponding microvolts
 // Source: http://srdata.nist.gov/its90/download/type_k.tab
 static thrm_lookup_t typeK_LUT_Kelvin[] = {
 {0,0},
@@ -161,12 +162,12 @@ static thrm_lookup_t typeK_LUT_Kelvin[] = {
 {1470,55296}
 };
 
-static inline uint32_t interpolate(uint32_t val, uint32_t rangeStart, uint32_t rangeEnd,
-        uint32_t valStart, uint32_t valEnd)
+static inline int32_t interpolate(int32_t val, int32_t rangeStart, int32_t rangeEnd,
+        int32_t valStart, int32_t valEnd)
 {
-    uint32_t result;
-    uint32_t uvOver,uvDelta;
-    uint32_t interp;
+    int32_t result;
+    int32_t uvOver,uvDelta;
+    int32_t interp;
 
     uvOver = (val - valStart);
     uvDelta = (valEnd - valStart);
@@ -179,13 +180,13 @@ static inline uint32_t interpolate(uint32_t val, uint32_t rangeStart, uint32_t r
     return result;
 }
 
-static inline uint32_t interpolateVoltage(uint32_t temp, int i)
+static inline int32_t interpolateVoltage(int32_t temp, int i)
 {
     return interpolate(temp, typeK_LUT_Kelvin[i-1].microvolts,typeK_LUT_Kelvin[i].microvolts,
             typeK_LUT_Kelvin[i-1].temperature, typeK_LUT_Kelvin[i].temperature);
 }
 
-static inline uint32_t interpolateTemperature(uint32_t microvolts, int i)
+static inline int32_t interpolateTemperature(int32_t microvolts, int i)
 {
     return interpolate(microvolts, typeK_LUT_Kelvin[i-1].temperature,typeK_LUT_Kelvin[i].temperature,
             typeK_LUT_Kelvin[i-1].microvolts, typeK_LUT_Kelvin[i].microvolts);
@@ -195,7 +196,7 @@ static inline uint32_t interpolateTemperature(uint32_t microvolts, int i)
  * Returns the index of the first point whose temperature value is
 greater than the argument
  **/
-static inline int searchTemp(uint32_t temp)
+static inline int searchTemp(int32_t temp)
 {
 	int i;
 	for(i = 0; i < POINTS_COUNT; i++)
@@ -212,7 +213,7 @@ static inline int searchTemp(uint32_t temp)
  * Returns the index of the first point whose microvolts value is
 greater than the argument
  **/
-static inline int searchMicrovolts(uint32_t microvolts)
+static inline int searchMicrovolts(int32_t microvolts)
 {
 	int i;
 	for(i = 0; i < POINTS_COUNT; i++) {
@@ -225,21 +226,27 @@ static inline int searchMicrovolts(uint32_t microvolts)
 }
 
 /**
- * Returns temperature as a function of the ambient temperature and the
-measured thermocouple voltage.
+ * Returns temperature as a function of the measured thermocouple voltage.
+ *
+ * int32_t microvoltsMeasured - Microvolts from 0v +/-
+ *
+ * Return: int32_t of the temperature in C in 1/10ths of a deg C
+ *
   **/
-int32_t thrmMicroVoltsToC(uint32_t microvoltsMeasured, uint32_t ambient_uvolts)
+int32_t thrmMicroVoltsToC(int32_t microvoltsMeasured)
 {
-	//convert ambient temp to microvolts
-	//and add them to the thermocouple measured microvolts
-    uint32_t microvolts;
-    uint32_t result;
+    int32_t microvolts;
+    int32_t result;
 
-    //microvolts = microvoltsMeasured + interpolateVoltage(ambient, searchTemp(ambient));
-    microvolts = microvoltsMeasured + ambient_uvolts;
+    // The microvolts are from 0, so add in the offset
+    microvolts = microvoltsMeasured + UVOLT_OFFSET;
 
 	//look up microvolts in The Table and interpolate
 	result = interpolateTemperature(microvolts, searchMicrovolts(microvolts));
+
+	// This is in kelvin, get it in 1/10ths of C and subtract the temperature
+	result = (result*10) -TEMP_OFFSET;
+
 	asm("nop");
 	return result;
 }
@@ -247,13 +254,26 @@ int32_t thrmMicroVoltsToC(uint32_t microvoltsMeasured, uint32_t ambient_uvolts)
 
 /**
  * Return the microvolts of a given temperature
+ *
+ * int32_t measured_temp - Temperature in 1/10ths of deg C
+ *
+ * Return: int32_t of the microvolts for the temperature from 0v +/-
+ *
  **/
-uint32_t thrmCToMicroVolts(int32_t measured_temp)
+int32_t thrmCToMicroVolts(int32_t measured_temp)
 {
-    uint32_t result;
+    int32_t result;
 
+    // The temp is in Celcius, so add in the offset
+    measured_temp += TEMP_OFFSET;
+
+    // This is the microvolts from abs zero
     result = interpolateVoltage(measured_temp, searchTemp(measured_temp));
 
+    // This is microvolts from abs zero, subtract the offset
+    result -= UVOLT_OFFSET;
+
+    asm("nop");
     return result;
 }
 
