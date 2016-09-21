@@ -1,4 +1,4 @@
-#if 0
+#if 1
 /*****************************************************************************
  **
  ** t1000 related functions.
@@ -15,6 +15,9 @@
 #include "labwiz/drv_lcd.h"
 #include "labwiz/drv_filesystem.h"
 
+#include "thermocouples.h"
+#include "mcp9800.h"
+
 // Definitions and types
 // ----------------------------------------------------------------------------
 #define STATE_INIT              0
@@ -29,7 +32,7 @@
 #define TEMP_MIN_VALUE_I        (-32760)
 
 // Int value representing an invalid temp. measurement
-#define OUT_OF_RANGE_INT        32760
+//#define OUT_OF_RANGE_INT        32760
 
 #define TEMPERATURE_UNITS_C     0
 #define TEMPERATURE_UNITS_F     1
@@ -111,10 +114,9 @@ void _t1000_draw_battery(int row,int col);
 
 // Public functions
 // ----------------------------------------------------------------------------
-
-void setup()
+void create_display_background(int num_digits)
 {
-    int8_t x;
+    int x;
     lcd_blank();
     // Top Row section
     lcd_line(8,0, 8, MAX_COL);
@@ -124,12 +126,30 @@ void setup()
     // Status bar
     lcd_line(18, 0,18,131);
     // Side bar
-    lcd_line(19, 18,MAX_ROW,18);
+    if(num_digits>3)
+        lcd_line(19, 18+7,MAX_ROW,18+7);
+    else
+        lcd_line(19, 18,MAX_ROW,18);
     // Tick marks
     for(x=1;x<5;x++)
         lcd_set_pixel((uint8_t)((x*10)+15),17);
 
     lcd_get_screen(&lcd_screen1);
+    return;
+}
+void setup()
+{
+    int8_t x;
+
+    // Thermocouple setup
+    thrm_init();
+
+    // Setup MCP9800 for ambient
+    mcp9800_init(I2C_BUS_1,0);
+    mcp9800_configure(MCP9800_12BIT);
+
+    // Create the background we are going to draw
+    create_display_background(3);
 
     lcd_blank();
     labwiz_set_btn_callback(_t1000_btn_press);
@@ -140,7 +160,7 @@ void setup()
     {
      for(uint8_t y=0; y < MAXIMUM_GRAPH_POINTS; y++)
      {
-         m_graphdata[c][y] = OUT_OF_RANGE_INT;
+         m_graphdata[c][y] = THRM_OUT_OF_RANGE/10;
      }
     }
 
@@ -153,10 +173,15 @@ void setup()
 TickType_t m_last_tick;
 void loop()
 {
+
+    thrm_poll();
+
     switch(m_state){
     case STATE_INIT:
-        vTaskDelay(portTICK_PERIOD_MS*2000);
+        vTaskDelay(portTICK_PERIOD_MS*1000);
         m_state = STATE_OPERATING;
+        // TODO: Check to see if the I2C busses are all good.
+
         lcd_set_screen(&lcd_screen1);
         break;
     default:
@@ -170,12 +195,18 @@ void loop()
         if(current_tick >= (m_last_tick+(portTICK_PERIOD_MS*PERIODIC_PERIOD_MS)))
         {
             int num_points,x;
+            int ambient;
 
             m_timecount++;
             m_elapsedtime = (m_timecount*PERIODIC_PERIOD_MS)/1000; // This gets us seconds
 
             m_last_tick = current_tick;
             led1(toggle());
+
+            mcp9800_update();
+
+            ambient=mcp9800_get_temperature();
+            thrm_set_ambient(ambient);
 
             // Grab a data points and add them to the set
 
@@ -217,8 +248,12 @@ void loop()
                 m_graphdata_count++;
             }
 
-            #if 0
-            // TODO: Save REAL values into m_graphdata[channel][m_graphdata_index]
+            #if 1
+            // Save REAL values into m_graphdata[channel][m_graphdata_index]
+            m_graphdata[0][m_graphdata_index] = thrm_get_temperature(1);
+            m_graphdata[1][m_graphdata_index] = thrm_get_temperature(2);
+            m_graphdata[2][m_graphdata_index] = thrm_get_temperature(3);
+            m_graphdata[3][m_graphdata_index] = thrm_get_temperature(4);
             #else
             _t1000_fake_data();
             #endif
@@ -256,7 +291,7 @@ void loop()
 
                 // if the sensor is out of range, don't show it. If we are showing one
                 // channel, ignore the others
-                if(m_graphdata[channel][m_graphdata_index] == OUT_OF_RANGE_INT ||
+                if(m_graphdata[channel][m_graphdata_index] >= THRM_OUT_OF_RANGE ||
                     (channel != m_current_channel && m_current_channel < 4) )
                 {
                   continue;
@@ -407,7 +442,7 @@ void _t1000_updateGraphScaling()
      for(uint8_t y=0; y < MAXIMUM_GRAPH_POINTS; y++)
      {
        p = *ptr;
-       if(p!=OUT_OF_RANGE_INT)
+       if(p!=(THRM_OUT_OF_RANGE/10))
        {
            p = _t1000_convertTemperatureInt(p);
            if(p>max) max = p;
@@ -442,6 +477,7 @@ void _t1000_updateGraphScaling()
   if(m_axisDigits!=old_axisdigits)
   {
       // TODO: Redraw the display
+      create_display_background(m_axisDigits);
   }
 
   return;
@@ -482,13 +518,14 @@ uint8_t _t1000_temperature_to_pixel(int16_t temp)
     p = (uint16_t)(60-p);
     return (uint8_t)p;
 }
+
 void _t1000_fake_data()
 {
     // DEBUG: Fake some data
-    m_graphdata[0][m_graphdata_index] = OUT_OF_RANGE_INT;
-    m_graphdata[1][m_graphdata_index] = OUT_OF_RANGE_INT;
-    m_graphdata[2][m_graphdata_index] = OUT_OF_RANGE_INT;
-    m_graphdata[3][m_graphdata_index] = OUT_OF_RANGE_INT;
+    m_graphdata[0][m_graphdata_index] = (THRM_OUT_OF_RANGE/10);
+    m_graphdata[1][m_graphdata_index] = (THRM_OUT_OF_RANGE/10);
+    m_graphdata[2][m_graphdata_index] = (THRM_OUT_OF_RANGE/10);
+    m_graphdata[3][m_graphdata_index] = (THRM_OUT_OF_RANGE/10);
     #if 0
     // EXTREME!
     m_graphdata[0][m_graphdata_index] = 30000; // 3270.9 C
@@ -514,7 +551,7 @@ void _t1000_fake_data()
     val += ADD;
     #endif
 
-    #if 1
+    #if 0
     static int16_t val=300;
     static int16_t step=5;
     m_graphdata[0][m_graphdata_index] = val;
@@ -548,7 +585,7 @@ char * _t1000_printtemp(char * buf, int16_t temp)
     uint8_t tmp8;
     tmp8 = (uint8_t)abs(temp%10);
     if(temp>9999)
-        sprintf(buf,"%d.%d",((temp)/10),tmp8);
+        sprintf(buf,"%d",((temp)/10));
     else
         sprintf(buf,"%3d.%d",((temp)/10),tmp8);
     return buf;

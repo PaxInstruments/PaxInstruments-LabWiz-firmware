@@ -13,6 +13,8 @@
 #define ENABLE_SERIAL_LOGGING       1
 #define ENABLE_SD_CARD_LOGGING      1
 
+#define ENABLE_MCP3424
+#define ENABLE_MCP9800
 
 // This should be the last thing in the defs.h
 #include "labwiz/labwizdefs.h"

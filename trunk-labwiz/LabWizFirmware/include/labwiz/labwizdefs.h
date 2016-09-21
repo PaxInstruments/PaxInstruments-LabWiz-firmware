@@ -53,6 +53,15 @@ void loop(void);
 #define mod4_gpio0(func)    portc_5(func)
 #define mod4_gpio1(func)    portb_1(func)
 
+
+#define I2C_BUS_1       1
+#define I2C_BUS_2       2
+
+#define SPI_BUS_1       1
+#define SPI_BUS_2       2
+#define SPI_BUS_3       3
+
+
 #endif // End include guard
 
 // eof

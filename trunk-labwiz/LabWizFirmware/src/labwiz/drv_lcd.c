@@ -198,7 +198,7 @@ void lcd_task( void *pvParameters )
         lcd_max_stack_depth = uxTaskGetStackHighWaterMark( NULL);
 
         // DEBUG, run every XXXms (slow for testing)
-        vTaskDelay(portTICK_PERIOD_MS*100);
+        vTaskDelay(portTICK_PERIOD_MS*50);
         //pin_bl(toggle());
         _lcd_draw();
 
@@ -361,6 +361,27 @@ void lcd_set_screen(lcd_screen_t * screen)
     if(screen==NULL) return;
     memcpy(m_lcd_write_ptr,screen,sizeof(lcd_screen_t));
     return;
+}
+
+char lcd_spinner()
+{
+    static int num=0;
+#if 0
+    char c = '/';
+    num++;
+    if(num>5)num=0;
+    switch(num){
+    case 4: //no break
+    case 1: c='-'; break;
+    case 5: //no break
+    case 2: c='\\';break;
+    }
+#else
+    char c = '*';
+    num=!num;
+    if(num) c='#';
+#endif
+    return c;
 }
 
 // Private functions
