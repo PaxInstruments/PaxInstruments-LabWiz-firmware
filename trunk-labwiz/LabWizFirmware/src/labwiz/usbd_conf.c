@@ -69,8 +69,11 @@ void HAL_PCD_MspInit(PCD_HandleTypeDef* pcdHandle)
     __HAL_RCC_USB_CLK_ENABLE();
 
     /* Peripheral interrupt init */
-    HAL_NVIC_SetPriority(USB_LP_CAN1_RX0_IRQn, 0, 0);
+    HAL_NVIC_SetPriority(USB_LP_CAN1_RX0_IRQn, 5, 0);
     HAL_NVIC_EnableIRQ(USB_LP_CAN1_RX0_IRQn);
+
+    //HAL_NVIC_DisableIRQ(USB_LP_CAN1_RX0_IRQn);
+    //HAL_NVIC_DisableIRQ(USB_HP_CAN1_TX_IRQn);
   /* USER CODE BEGIN USB_MspInit 1 */
 
   /* USER CODE END USB_MspInit 1 */
@@ -88,7 +91,13 @@ void HAL_PCD_MspDeInit(PCD_HandleTypeDef* pcdHandle)
     __HAL_RCC_USB_CLK_DISABLE();
 
     /* Peripheral interrupt Deinit*/
-    HAL_NVIC_DisableIRQ(USB_LP_CAN1_RX0_IRQn);
+  /* USER CODE BEGIN USB:USB_LP_CAN1_RX0_IRQn disable */
+    /**
+    * Uncomment the line below to disable the "USB_LP_CAN1_RX0_IRQn" interrupt
+    * Be aware, disabling shared interrupt may affect other IPs
+    */
+    /* HAL_NVIC_DisableIRQ(USB_LP_CAN1_RX0_IRQn); */
+  /* USER CODE END USB:USB_LP_CAN1_RX0_IRQn disable */
 
   /* USER CODE BEGIN USB_MspDeInit 1 */
 

@@ -26,24 +26,24 @@
 // ---------------------------------------------------------------------------
 
 // The data/cmd GPIO
-#define pin_data_cmd(func)  portb_9(func)
+#define pin_data_cmd(func)  portc_0(func)
 //#define pin_data_cmd(func)  port_none(func)
 #define m_set_data()        pin_data_cmd(set())
 #define m_set_cmd()         pin_data_cmd(clear())
 
 // Reset line
-#define pin_reset(func)     portb_8(func)
+#define pin_reset(func)     portc_13(func)
 //#define pin_reset(func)  port_none(func)
 #define m_reset_on()        pin_reset(clear())
 #define m_reset_off()       pin_reset(set())
 
 //#define pin_cs(func)        porta_1(func)
-#define pin_cs(func)        portb_7(func)
+#define pin_cs(func)        porta_15(func)
 //#define pin_cs(func)        port_none(func)
 #define m_cs_enable()       pin_cs(clear())
 #define m_cs_disable()      pin_cs(set())
 
-#define pin_bl(func)        portb_6(func)
+#define pin_bl(func)        portb_4(func)
 #define m_bl_enable()       pin_bl(clear())
 #define m_bl_disable()      pin_bl(set())
 
@@ -198,7 +198,7 @@ void lcd_task( void *pvParameters )
         lcd_max_stack_depth = uxTaskGetStackHighWaterMark( NULL);
 
         // DEBUG, run every XXXms (slow for testing)
-        vTaskDelay(portTICK_PERIOD_MS*100);
+        vTaskDelay(portTICK_PERIOD_MS*50);
         //pin_bl(toggle());
         _lcd_draw();
 
@@ -361,6 +361,27 @@ void lcd_set_screen(lcd_screen_t * screen)
     if(screen==NULL) return;
     memcpy(m_lcd_write_ptr,screen,sizeof(lcd_screen_t));
     return;
+}
+
+char lcd_spinner()
+{
+    static int num=0;
+#if 0
+    char c = '/';
+    num++;
+    if(num>5)num=0;
+    switch(num){
+    case 4: //no break
+    case 1: c='-'; break;
+    case 5: //no break
+    case 2: c='\\';break;
+    }
+#else
+    char c = '*';
+    num=!num;
+    if(num) c='#';
+#endif
+    return c;
 }
 
 // Private functions
