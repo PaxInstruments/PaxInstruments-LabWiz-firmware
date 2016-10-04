@@ -62,7 +62,7 @@ UART_HandleTypeDef huart2;
 UART_HandleTypeDef huart3;
 
 osThreadId defaultTaskHandle;
-//PCD_HandleTypeDef hpcd_USB_FS;
+PCD_HandleTypeDef hpcd_USB_FS;
 
 /* USER CODE BEGIN PV */
 /* Private variables ---------------------------------------------------------*/
@@ -82,7 +82,7 @@ static void MX_SPI3_Init(void);
 static void MX_USART1_UART_Init(void);
 static void MX_USART2_UART_Init(void);
 static void MX_USART3_UART_Init(void);
-//static void MX_USB_PCD_Init(void);
+static void MX_USB_PCD_Init(void);
 static void MX_RTC_Init(void);
 void StartDefaultTask(void const * argument);
 
@@ -121,18 +121,15 @@ int main(void)
   MX_GPIO_Init();
   MX_ADC1_Init();
   //MX_I2C1_Init();
-#if 0
   MX_SDIO_SD_Init();
-#endif
   MX_SPI1_Init();
   MX_SPI2_Init();
   MX_SPI3_Init();
-#if 0
-  MX_USART1_UART_Init();
+  //MX_USART1_UART_Init();
   MX_USART2_UART_Init();
-  MX_USART3_UART_Init();
-  //MX_USB_PCD_Init();
-#endif
+  //MX_USART3_UART_Init();
+  MX_USB_PCD_Init();
+
   MX_RTC_Init();
 
   /* USER CODE BEGIN 2 */
@@ -483,7 +480,7 @@ static void MX_USART3_UART_Init(void)
 
 }
 
-#if 0
+#if 1
 /* USB init function */
 static void MX_USB_PCD_Init(void)
 {

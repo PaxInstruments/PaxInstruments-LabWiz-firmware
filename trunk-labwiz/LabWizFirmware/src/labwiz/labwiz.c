@@ -79,23 +79,22 @@ void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* hadc);
 
 void labwiz_init()
 {
-#if 0
     // All HAL init functions have been called at this point
     drv_uart_init();
     drv_esp8266_init();
     drv_spi_init();
     drv_i2c_init();
-#endif
+
     lcd_init();
 
     m_exti_mask = 0;
     vSemaphoreCreateBinary(m_labwiz_isr_semaphore);
     m_btn_cb = NULL;
 
-#if 0
+
     /* init code for FATFS */
     MX_FATFS_Init();
-#endif
+
     // Setup RTC
     // RTC clock is 40KHz.  WE could provide the prescale
     // but the HAL module auto-calculates it
@@ -156,7 +155,7 @@ void labwiz_task_init()
     // DEBUG
     if(result!=pdPASS)
         while(DEBUG) nop();
-#if 0
+
     // UART task to read from serial ports
     result = xTaskCreate( drv_uart_task,
             "UARTTask",
@@ -168,7 +167,7 @@ void labwiz_task_init()
     // DEBUG
     if(result!=pdPASS)
         while(DEBUG) nop();
-#endif
+
     // LCD task to write the buffer to the SPI bus
     result = xTaskCreate( lcd_task,
             "LCDTask",
@@ -180,7 +179,7 @@ void labwiz_task_init()
     // DEBUG
     if(result!=pdPASS)
         while(DEBUG) nop();
-#if 0
+
     // Labwiz task to read ISRs and process data
     result = xTaskCreate( _labwiz_isr_task,
             "LabWiz",
@@ -192,7 +191,6 @@ void labwiz_task_init()
     // DEBUG
     if(result!=pdPASS)
         while(DEBUG) nop();
-#endif
 
     // The primary task in the system, defined by the user
     result = xTaskCreate( _labwiz_app_task,
