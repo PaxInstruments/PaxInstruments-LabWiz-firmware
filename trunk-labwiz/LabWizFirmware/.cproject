@@ -424,4 +424,5 @@
 			<resource resourceType="PROJECT" workspacePath="/LabWizFirmware"/>
 		</configuration>
 	</storageModule>
+	<storageModule moduleId="org.eclipse.cdt.make.core.buildtargets"/>
 </cproject>

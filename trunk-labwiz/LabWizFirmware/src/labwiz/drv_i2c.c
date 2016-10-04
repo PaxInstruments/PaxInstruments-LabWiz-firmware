@@ -38,7 +38,7 @@ void drv_i2c_init()
 I2C_HandleTypeDef * i2c_get_bus_handle(int i2c_bus)
 {
     if(i2c_bus==I2C_BUS_1) return &hi2c1;
-    if(i2c_bus==I2C_BUS_2) return &hi2c2;
+    //if(i2c_bus==I2C_BUS_2) return &hi2c2;
     return NULL;
 }
 

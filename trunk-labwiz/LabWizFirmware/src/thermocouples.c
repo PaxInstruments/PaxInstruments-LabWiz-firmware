@@ -67,6 +67,7 @@ int thrm_get_temperature(int channel)
     {
         int uvolts,celcius;
         uvolts = adc_value*101;
+        //tempval = uvolts;
 
         uvolts += m_ambient_uvolts;
         celcius = thrmMicroVoltsToC(uvolts);
@@ -79,6 +80,7 @@ int thrm_get_temperature(int channel)
 void thrm_set_ambient(int ambient)
 {
     int32_t ambient_uvolts;
+
     ambient_uvolts = thrmCToMicroVolts(ambient);
 
     m_ambient_uvolts = ambient_uvolts;

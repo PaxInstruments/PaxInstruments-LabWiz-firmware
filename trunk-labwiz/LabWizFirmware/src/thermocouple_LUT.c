@@ -174,22 +174,49 @@ static inline int32_t interpolate(int32_t val, int32_t rangeStart, int32_t range
 
     interp = (uvOver*1000) / uvDelta;
 
-    result = ((rangeEnd - rangeStart) * interp)/100;
+    result = ((rangeEnd - rangeStart) * interp)/1000;
     result += rangeStart;
 
     return result;
 }
 
+// Given a temperature in 1/10ths, find the microvolts associated with it
 static inline int32_t interpolateVoltage(int32_t temp, int i)
 {
-    return interpolate(temp, typeK_LUT_Kelvin[i-1].microvolts,typeK_LUT_Kelvin[i].microvolts,
-            typeK_LUT_Kelvin[i-1].temperature, typeK_LUT_Kelvin[i].temperature);
+    int32_t result;
+    int32_t tOver,tDelta;
+    int32_t interp;
+    int32_t rangeStart,rangeEnd;
+
+    rangeStart = typeK_LUT_Kelvin[i-1].temperature*10;
+    rangeEnd = typeK_LUT_Kelvin[i].temperature*10;
+
+    tOver = (temp- rangeStart);
+    tDelta = (rangeEnd - rangeStart);
+
+    interp = (tOver*100) / tDelta;
+
+    result = ((typeK_LUT_Kelvin[i].microvolts - typeK_LUT_Kelvin[i-1].microvolts) * interp)/100;
+    result += typeK_LUT_Kelvin[i-1].microvolts;
+
+    return result;
 }
 
 static inline int32_t interpolateTemperature(int32_t microvolts, int i)
 {
-    return interpolate(microvolts, typeK_LUT_Kelvin[i-1].temperature,typeK_LUT_Kelvin[i].temperature,
-            typeK_LUT_Kelvin[i-1].microvolts, typeK_LUT_Kelvin[i].microvolts);
+    int32_t result;
+    int32_t uvOver,uvDelta;
+    int32_t interp;
+
+    uvOver = (microvolts- typeK_LUT_Kelvin[i-1].microvolts);
+    uvDelta = (typeK_LUT_Kelvin[i].microvolts - typeK_LUT_Kelvin[i-1].microvolts);
+
+    interp = (uvOver*1000) / uvDelta;
+
+    result = ((typeK_LUT_Kelvin[i].temperature - typeK_LUT_Kelvin[i-1].temperature) * interp)/1000;
+    result += typeK_LUT_Kelvin[i-1].temperature;
+
+    return result;
 }
 
 /**
@@ -268,7 +295,8 @@ int32_t thrmCToMicroVolts(int32_t measured_temp)
     measured_temp += TEMP_OFFSET;
 
     // This is the microvolts from abs zero
-    result = interpolateVoltage(measured_temp, searchTemp(measured_temp));
+    // The measured_temp is in 1/10ths of volts, so div by 10 in the search
+    result = interpolateVoltage(measured_temp, searchTemp(measured_temp/10));
 
     // This is microvolts from abs zero, subtract the offset
     result -= UVOLT_OFFSET;
