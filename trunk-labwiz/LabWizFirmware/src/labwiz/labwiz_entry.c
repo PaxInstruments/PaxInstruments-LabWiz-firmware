@@ -46,10 +46,7 @@
 /* Private variables ---------------------------------------------------------*/
 ADC_HandleTypeDef hadc1;
 
-CAN_HandleTypeDef hcan;
-
 I2C_HandleTypeDef hi2c1;
-//I2C_HandleTypeDef hi2c2;
 
 RTC_HandleTypeDef hrtc;
 
@@ -65,7 +62,7 @@ UART_HandleTypeDef huart2;
 UART_HandleTypeDef huart3;
 
 osThreadId defaultTaskHandle;
-PCD_HandleTypeDef hpcd_USB_FS;
+//PCD_HandleTypeDef hpcd_USB_FS;
 
 /* USER CODE BEGIN PV */
 /* Private variables ---------------------------------------------------------*/
@@ -76,10 +73,8 @@ PCD_HandleTypeDef hpcd_USB_FS;
 void SystemClock_Config(void);
 void Error_Handler(void);
 static void MX_GPIO_Init(void);
-static void MX_CAN_Init(void);
+static void MX_ADC1_Init(void);
 static void MX_I2C1_Init(void);
-static void MX_I2C2_Init(void);
-static void MX_RTC_Init(void);
 static void MX_SDIO_SD_Init(void);
 static void MX_SPI1_Init(void);
 static void MX_SPI2_Init(void);
@@ -87,8 +82,8 @@ static void MX_SPI3_Init(void);
 static void MX_USART1_UART_Init(void);
 static void MX_USART2_UART_Init(void);
 static void MX_USART3_UART_Init(void);
-static void MX_USB_PCD_Init(void);
-static void MX_ADC1_Init(void);
+//static void MX_USB_PCD_Init(void);
+static void MX_RTC_Init(void);
 void StartDefaultTask(void const * argument);
 
 /* USER CODE BEGIN PFP */
@@ -124,23 +119,24 @@ int main(void)
 
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
-  //MX_CAN_Init();
-  MX_I2C1_Init();
-  MX_I2C2_Init();
-  MX_RTC_Init();
+  MX_ADC1_Init();
+  //MX_I2C1_Init();
+#if 0
   MX_SDIO_SD_Init();
+#endif
   MX_SPI1_Init();
   MX_SPI2_Init();
   MX_SPI3_Init();
+#if 0
   MX_USART1_UART_Init();
   MX_USART2_UART_Init();
-  MX_ADC1_Init();
   MX_USART3_UART_Init();
-  MX_USB_PCD_Init();
+  //MX_USB_PCD_Init();
+#endif
+  MX_RTC_Init();
 
   /* USER CODE BEGIN 2 */
   labwiz_init();
-  //__enable_irq();
   /* USER CODE END 2 */
 
   /* USER CODE BEGIN RTOS_MUTEX */
@@ -270,29 +266,6 @@ static void MX_ADC1_Init(void)
 
 }
 
-/* CAN init function */
-static void MX_CAN_Init(void)
-{
-
-  hcan.Instance = CAN1;
-  hcan.Init.Prescaler = 16;
-  hcan.Init.Mode = CAN_MODE_NORMAL;
-  hcan.Init.SJW = CAN_SJW_1TQ;
-  hcan.Init.BS1 = CAN_BS1_1TQ;
-  hcan.Init.BS2 = CAN_BS2_1TQ;
-  hcan.Init.TTCM = DISABLE;
-  hcan.Init.ABOM = DISABLE;
-  hcan.Init.AWUM = DISABLE;
-  hcan.Init.NART = DISABLE;
-  hcan.Init.RFLM = DISABLE;
-  hcan.Init.TXFP = DISABLE;
-  if (HAL_CAN_Init(&hcan) != HAL_OK)
-  {
-    Error_Handler();
-  }
-
-}
-
 /* I2C1 init function */
 static void MX_I2C1_Init(void)
 {
@@ -310,27 +283,6 @@ static void MX_I2C1_Init(void)
   {
     Error_Handler();
   }
-
-}
-
-/* I2C2 init function */
-static void MX_I2C2_Init(void)
-{
-#if 0
-  hi2c2.Instance = I2C2;
-  hi2c2.Init.ClockSpeed = 100000;
-  hi2c2.Init.DutyCycle = I2C_DUTYCYCLE_2;
-  hi2c2.Init.OwnAddress1 = 0;
-  hi2c2.Init.AddressingMode = I2C_ADDRESSINGMODE_7BIT;
-  hi2c2.Init.DualAddressMode = I2C_DUALADDRESS_DISABLE;
-  hi2c2.Init.OwnAddress2 = 0;
-  hi2c2.Init.GeneralCallMode = I2C_GENERALCALL_DISABLE;
-  hi2c2.Init.NoStretchMode = I2C_NOSTRETCH_DISABLE;
-  if (HAL_I2C_Init(&hi2c2) != HAL_OK)
-  {
-    Error_Handler();
-  }
-#endif
 
 }
 
@@ -385,7 +337,7 @@ static void MX_SDIO_SD_Init(void)
   hsd.Init.ClockPowerSave = SDIO_CLOCK_POWER_SAVE_DISABLE;
   hsd.Init.BusWide = SDIO_BUS_WIDE_1B;
   hsd.Init.HardwareFlowControl = SDIO_HARDWARE_FLOW_CONTROL_DISABLE;
-  hsd.Init.ClockDiv = 0;
+  hsd.Init.ClockDiv = 10;
   if (HAL_SD_Init(&hsd, &SDCardInfo) != SD_OK)
   {
     Error_Handler();
@@ -531,6 +483,7 @@ static void MX_USART3_UART_Init(void)
 
 }
 
+#if 0
 /* USB init function */
 static void MX_USB_PCD_Init(void)
 {
@@ -548,6 +501,7 @@ static void MX_USB_PCD_Init(void)
   }
 
 }
+#endif
 
 /** Configure pins as 
         * Analog 
@@ -600,6 +554,12 @@ static void MX_GPIO_Init(void)
   /*Configure GPIO pins : SW_D_Pin SW_E_Pin */
   GPIO_InitStruct.Pin = SW_D_Pin|SW_E_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
+
+  // Configure pins for I2C
+  GPIO_InitStruct.Pin = GPIO_PIN_8|GPIO_PIN_9;
+  GPIO_InitStruct.Mode = GPIO_MODE_AF_OD;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
 

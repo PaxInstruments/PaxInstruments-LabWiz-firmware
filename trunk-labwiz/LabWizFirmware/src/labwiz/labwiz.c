@@ -79,28 +79,30 @@ void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* hadc);
 
 void labwiz_init()
 {
+#if 0
     // All HAL init functions have been called at this point
     drv_uart_init();
     drv_esp8266_init();
     drv_spi_init();
     drv_i2c_init();
-
+#endif
     lcd_init();
 
     m_exti_mask = 0;
     vSemaphoreCreateBinary(m_labwiz_isr_semaphore);
     m_btn_cb = NULL;
 
+#if 0
     /* init code for FATFS */
     MX_FATFS_Init();
-
+#endif
     // Setup RTC
     // RTC clock is 40KHz.  WE could provide the prescale
     // but the HAL module auto-calculates it
     if(HAL_RTC_Init(&hrtc)!=HAL_OK)
         while(DEBUG) nop();
 
-
+#if 0
     // Enable the External interrupts 10-15 global interrupt
     // EXTI10,11 are SW_B,SW_A
     HAL_NVIC_SetPriority(EXTI15_10_IRQn, 8, 0);
@@ -117,6 +119,7 @@ void labwiz_init()
     // PWR switch?
     //HAL_NVIC_SetPriority(EXTI0_IRQn, 8, 0);
     //HAL_NVIC_EnableIRQ(EXTI0_IRQn);
+#endif
 
     HAL_NVIC_SetPriority(ADC1_2_IRQn, 8, 0);
     HAL_NVIC_EnableIRQ(ADC1_2_IRQn);
@@ -124,6 +127,7 @@ void labwiz_init()
     HAL_NVIC_DisableIRQ(WWDG_IRQn);
 
     m_adc_done = true;
+
 
     return;
 }
@@ -152,7 +156,7 @@ void labwiz_task_init()
     // DEBUG
     if(result!=pdPASS)
         while(DEBUG) nop();
-
+#if 0
     // UART task to read from serial ports
     result = xTaskCreate( drv_uart_task,
             "UARTTask",
@@ -164,7 +168,7 @@ void labwiz_task_init()
     // DEBUG
     if(result!=pdPASS)
         while(DEBUG) nop();
-
+#endif
     // LCD task to write the buffer to the SPI bus
     result = xTaskCreate( lcd_task,
             "LCDTask",
@@ -176,7 +180,7 @@ void labwiz_task_init()
     // DEBUG
     if(result!=pdPASS)
         while(DEBUG) nop();
-
+#if 0
     // Labwiz task to read ISRs and process data
     result = xTaskCreate( _labwiz_isr_task,
             "LabWiz",
@@ -188,6 +192,7 @@ void labwiz_task_init()
     // DEBUG
     if(result!=pdPASS)
         while(DEBUG) nop();
+#endif
 
     // The primary task in the system, defined by the user
     result = xTaskCreate( _labwiz_app_task,
@@ -200,6 +205,7 @@ void labwiz_task_init()
     // DEBUG
     if(result!=pdPASS)
         while(DEBUG) nop();
+
     return;
 }
 
@@ -326,7 +332,7 @@ void _labwiz_button_press(uint8_t button)
     }
     return;
 }
-
+#define pin_bl(func)        porta_10(func)
 void _labwiz_periodic_task( void *pvParameters )
 {
     for( ;; )

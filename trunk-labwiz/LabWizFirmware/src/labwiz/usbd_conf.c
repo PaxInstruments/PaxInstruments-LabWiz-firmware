@@ -96,7 +96,7 @@ void HAL_PCD_MspDeInit(PCD_HandleTypeDef* pcdHandle)
     * Uncomment the line below to disable the "USB_LP_CAN1_RX0_IRQn" interrupt
     * Be aware, disabling shared interrupt may affect other IPs
     */
-    /* HAL_NVIC_DisableIRQ(USB_LP_CAN1_RX0_IRQn); */
+    HAL_NVIC_DisableIRQ(USB_LP_CAN1_RX0_IRQn);
   /* USER CODE END USB:USB_LP_CAN1_RX0_IRQn disable */
 
   /* USER CODE BEGIN USB_MspDeInit 1 */

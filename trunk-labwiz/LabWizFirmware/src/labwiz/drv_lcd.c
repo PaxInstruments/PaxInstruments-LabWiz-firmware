@@ -26,24 +26,20 @@
 // ---------------------------------------------------------------------------
 
 // The data/cmd GPIO
-#define pin_data_cmd(func)  portc_0(func)
-//#define pin_data_cmd(func)  port_none(func)
+#define pin_data_cmd(func)  portc_13(func)
 #define m_set_data()        pin_data_cmd(set())
 #define m_set_cmd()         pin_data_cmd(clear())
 
 // Reset line
-#define pin_reset(func)     portc_13(func)
-//#define pin_reset(func)  port_none(func)
+#define pin_reset(func)     portb_4(func)
 #define m_reset_on()        pin_reset(clear())
 #define m_reset_off()       pin_reset(set())
 
-//#define pin_cs(func)        porta_1(func)
 #define pin_cs(func)        porta_15(func)
-//#define pin_cs(func)        port_none(func)
 #define m_cs_enable()       pin_cs(clear())
 #define m_cs_disable()      pin_cs(set())
 
-#define pin_bl(func)        portb_4(func)
+#define pin_bl(func)        porta_10(func)
 #define m_bl_enable()       pin_bl(clear())
 #define m_bl_disable()      pin_bl(set())
 

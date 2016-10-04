@@ -49,11 +49,11 @@ void setup()
     labwiz_set_btn_callback(_test_btn_press);
 
     // Thermocouple setup
-    thrm_init();
+    //thrm_init();
 
     // Setup MCP9800 for ambient
-    mcp9800_init(I2C_BUS_1,0);
-    mcp9800_configure(MCP9800_12BIT);
+    //mcp9800_init(I2C_BUS_1,0);
+    //mcp9800_configure(MCP9800_12BIT);
 
     // Setup LCD screen
     lcd_blank();
@@ -90,7 +90,7 @@ void loop()
             m_last_tick = current_tick;
             led1(toggle());
 
-            mcp9800_update();
+            //mcp9800_update();
 
             lcd_set_screen(&m_testscreen);
 
@@ -114,7 +114,8 @@ void loop()
                 lcd_print(m_scratch,(x*10)+10,0);
             }
             {
-                int temp=mcp9800_get_temperature();
+                //int temp=mcp9800_get_temperature();
+                int temp=0;
                 thrm_set_ambient(temp);
                 sprintf(m_scratch,"Ambient:%d.%d",temp/10,temp%10);
                 lcd_print(m_scratch,50,0);

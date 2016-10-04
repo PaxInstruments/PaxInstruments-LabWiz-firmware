@@ -83,6 +83,14 @@
 #define porta_8_read_lat()  (READ_LAT(PORTA,8))
 #define porta_8_toggle()    do{TOGGLE(PORTA,8);}while(0)
 
+#define porta_10(func)       porta_10_##func
+#define porta_10_set()       do{SET(PORTA,10);}while(0)
+#define porta_10_clear()     do{CLR(PORTA,10);}while(0)
+#define porta_10_write(V)    do{WRITE(PORTA,10,(V));}while(0)
+#define porta_10_read()      (READ(PORTA,10))
+#define porta_10_read_lat()  (READ_LAT(PORTA,10))
+#define porta_10_toggle()    do{TOGGLE(PORTA,10);}while(0)
+
 #define porta_15(func)       porta_15_##func
 #define porta_15_set()       do{SET(PORTA,15);}while(0)
 #define porta_15_clear()     do{CLR(PORTA,15);}while(0)
