@@ -123,6 +123,8 @@ void loop()
             sprintf(&(m_scratch),"%02d:%02d:%02d",tm.Hours,tm.Minutes,tm.Seconds);
             lcd_print(m_scratch,0,82);
 
+            d = usb_write((uint8_t*)m_scratch,strlen(m_scratch));
+
             lcd_latch();
         }
     }
