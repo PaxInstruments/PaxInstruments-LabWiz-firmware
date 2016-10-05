@@ -83,6 +83,14 @@
 #define porta_8_read_lat()  (READ_LAT(PORTA,8))
 #define porta_8_toggle()    do{TOGGLE(PORTA,8);}while(0)
 
+#define porta_9(func)       porta_9_##func
+#define porta_9_set()       do{SET(PORTA,9);}while(0)
+#define porta_9_clear()     do{CLR(PORTA,9);}while(0)
+#define porta_9_write(V)    do{WRITE(PORTA,9,(V));}while(0)
+#define porta_9_read()      (READ(PORTA,9))
+#define porta_9_read_lat()  (READ_LAT(PORTA,9))
+#define porta_9_toggle()    do{TOGGLE(PORTA,9);}while(0)
+
 #define porta_10(func)       porta_10_##func
 #define porta_10_set()       do{SET(PORTA,10);}while(0)
 #define porta_10_clear()     do{CLR(PORTA,10);}while(0)
@@ -156,6 +164,14 @@
 #define portb_9_read()      (READ(PORTB,9))
 #define portb_9_read_lat()  (READ_LAT(PORTB,9))
 #define portb_9_toggle()    do{TOGGLE(PORTB,9);}while(0)
+
+#define portb_10(func)      portb_10_##func
+#define portb_10_set()      do{SET(PORTB,10);}while(0)
+#define portb_10_clear()    do{CLR(PORTB,10);}while(0)
+#define portb_10_write(V)   do{WRITE(PORTB,10,(V));}while(0)
+#define portb_10_read()     (READ(PORTB,10))
+#define portb_10_read_lat() (READ_LAT(PORTB,10))
+#define portb_10_toggle()   do{TOGGLE(PORTB,10);}while(0)
 
 #define portb_12(func)      portb_12_##func
 #define portb_12_set()      do{SET(PORTB,12);}while(0)
@@ -245,6 +261,14 @@
 #define portc_7_read()      (READ(PORTC,7))
 #define portc_7_read_lat()  (READ_LAT(PORTC,7))
 #define portc_7_toggle()    do{TOGGLE(PORTC,7);}while(0)
+
+#define portc_9(func)       portc_9_##func
+#define portc_9_set()       do{SET(PORTC,9);}while(0)
+#define portc_9_clear()     do{CLR(PORTC,9);}while(0)
+#define portc_9_write(V)    do{WRITE(PORTC,9,(V));}while(0)
+#define portc_9_read()      (READ(PORTC,9))
+#define portc_9_read_lat()  (READ_LAT(PORTC,9))
+#define portc_9_toggle()    do{TOGGLE(PORTC,9);}while(0)
 
 #define portc_10(func)      portc_10_##func
 #define portc_10_set()      do{SET(PORTC,10);}while(0)

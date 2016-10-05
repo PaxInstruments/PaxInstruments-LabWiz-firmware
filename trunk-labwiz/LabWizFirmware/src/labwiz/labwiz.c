@@ -26,12 +26,22 @@
 // ----------------------------------------------------------------------------
 #define DEBUG   1
 
+#if 0
 #define SW_A_EXTI           11
 #define SW_B_EXTI           10
 #define SW_C_EXTI           7
 #define SW_D_EXTI           8
 #define SW_E_EXTI           2
 #define SW_PWR_EXTI         0
+#else
+#define SW_A_EXTI           9
+#define SW_B_EXTI           8
+#define SW_C_EXTI           9
+#define SW_D_EXTI           2
+#define SW_E_EXTI           10
+#define SW_PWR_EXTI         0
+
+#endif
 
 #define SW_A_EXTI_MASK      (1<<(SW_A_EXTI))
 #define SW_B_EXTI_MASK      (1<<(SW_B_EXTI))
@@ -101,21 +111,21 @@ void labwiz_init()
     if(HAL_RTC_Init(&hrtc)!=HAL_OK)
         while(DEBUG) nop();
 
-#if 0
+#if 1
     // Enable the External interrupts 10-15 global interrupt
-    // EXTI10,11 are SW_B,SW_A
+    // EXTI10 is SW_E
     HAL_NVIC_SetPriority(EXTI15_10_IRQn, 8, 0);
     HAL_NVIC_EnableIRQ(EXTI15_10_IRQn);
 
-    // EXTI2 = SW_E
+    // EXTI2 = SW_D
     HAL_NVIC_SetPriority(EXTI2_IRQn, 8, 0);
     HAL_NVIC_EnableIRQ(EXTI2_IRQn);
 
-    // EXTI7,8 are SW_C,SW_8
+    // EXTI8,9 are SW_A,SW_B
     HAL_NVIC_SetPriority(EXTI9_5_IRQn, 8, 0);
     HAL_NVIC_EnableIRQ(EXTI9_5_IRQn);
 
-    // PWR switch?
+    // EXTI0 is SW_PWR
     //HAL_NVIC_SetPriority(EXTI0_IRQn, 8, 0);
     //HAL_NVIC_EnableIRQ(EXTI0_IRQn);
 #endif
@@ -371,8 +381,10 @@ void _labwiz_isr_task( void *pvParameters )
         if(m_exti_mask & SW_B_EXTI_MASK)
         { m_exti_mask&=(uint32_t)(~SW_B_EXTI_MASK);_labwiz_button_press(SW_B);}
 
+#if 0
         if(m_exti_mask & SW_C_EXTI_MASK)
         { m_exti_mask&=(uint32_t)(~SW_C_EXTI_MASK);_labwiz_button_press(SW_C);}
+#endif
 
         if(m_exti_mask & SW_D_EXTI_MASK)
         { m_exti_mask&=(uint32_t)(~SW_D_EXTI_MASK);_labwiz_button_press(SW_D);}

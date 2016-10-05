@@ -480,7 +480,6 @@ static void MX_USART3_UART_Init(void)
 
 }
 
-#if 1
 /* USB init function */
 static void MX_USB_PCD_Init(void)
 {
@@ -498,7 +497,6 @@ static void MX_USB_PCD_Init(void)
   }
 
 }
-#endif
 
 /** Configure pins as 
         * Analog 
@@ -550,7 +548,7 @@ static void MX_GPIO_Init(void)
 
   /*Configure GPIO pins : SW_D_Pin SW_E_Pin */
   GPIO_InitStruct.Pin = SW_D_Pin|SW_E_Pin;
-  GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
+  GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
 
@@ -565,17 +563,29 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Mode = GPIO_MODE_ANALOG;
   HAL_GPIO_Init(VCAP1_GPIO_Port, &GPIO_InitStruct);
 
-  /*Configure GPIO pins : BATT_STAT_Pin SW_A_Pin */
-  GPIO_InitStruct.Pin = BATT_STAT_Pin|SW_A_Pin;
+  /*Configure GPIO pin : BATT_STAT_Pin */
+  GPIO_InitStruct.Pin = BATT_STAT_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
-  HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
+  HAL_GPIO_Init(BATT_STAT_GPIO_Port, &GPIO_InitStruct);
 
-  /*Configure GPIO pins : SW_B_Pin SW_C_Pin */
-  GPIO_InitStruct.Pin = SW_B_Pin|SW_C_Pin;
+  /*Configure GPIO pin : SW_A_Pin */
+  GPIO_InitStruct.Pin = SW_A_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  HAL_GPIO_Init(SW_A_GPIO_Port, &GPIO_InitStruct);
+
+  /*Configure GPIO pin : SW_B_Pin */
+  GPIO_InitStruct.Pin = SW_B_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  HAL_GPIO_Init(SW_B_GPIO_Port, &GPIO_InitStruct);
+
+  /*Configure GPIO pin : SW_C_Pin */
+  GPIO_InitStruct.Pin = SW_C_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
-  HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
+  HAL_GPIO_Init(SW_C_GPIO_Port, &GPIO_InitStruct);
 
 }
 

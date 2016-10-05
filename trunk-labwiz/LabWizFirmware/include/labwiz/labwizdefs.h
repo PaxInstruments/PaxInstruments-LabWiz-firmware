@@ -38,24 +38,26 @@
 void setup(void);
 void loop(void);
 
-#define btnA(func)          portc_11(func)
-#define btnB(func)          portc_10(func)
-#define btnC(func)          portc_7(func)
-#define btnD(func)          porta_8(func)
+#define btnA(func)          portc_9(func)
+#define btnB(func)          porta_8(func)
+#define btnC(func)          porta_9(func)
+#define btnD(func)          portb_2(func)
 #define btnE(func)          portb_2(func)
-#define btnPwr(func)        porta_0(func)
+#define btnPwr(func)        portb_10(func)
 
 
-#define mod1_gpio1(func)    portc_4(func)
-#define mod2_gpio0(func)    porta_1(func)
+#define mod1_gpio0(func)    porta_4(func)
+#define mod1_gpio1(func)    porta_1(func)
+#define mod2_gpio0(func)    portb_0(func)
 #define mod2_gpio1(func)    portc_3(func)
+#define mod3_gpio0(func)    portb_12(func)
 #define mod3_gpio1(func)    portc_2(func)
-#define mod4_gpio0(func)    portc_5(func)
-#define mod4_gpio1(func)    portb_1(func)
+#define mod4_gpio0(func)    portb_1(func)
+#define mod4_gpio1(func)    portc_0(func)
 
 
 #define I2C_BUS_1       1
-#define I2C_BUS_2       2
+//#define I2C_BUS_2       2
 
 #define SPI_BUS_1       1
 #define SPI_BUS_2       2
