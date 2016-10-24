@@ -126,6 +126,10 @@ void HAL_ADC_MspDeInit(ADC_HandleTypeDef* hadc)
 
 }
 
+#define ACG_PERIPH_BASE           ((uint32_t)0x40000000) /*!< Peripheral base address in the alias region */
+#define ACG_APB2PERIPH_BASE       (ACG_PERIPH_BASE + 0x10000)
+#define ACG_AFIO_BASE             (ACG_APB2PERIPH_BASE + 0x0000)
+
 void HAL_I2C_MspInit(I2C_HandleTypeDef* hi2c)
 {
 
@@ -145,7 +149,16 @@ void HAL_I2C_MspInit(I2C_HandleTypeDef* hi2c)
     GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_HIGH;
     HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
 
+    // ACG
+    #if 0
     __HAL_AFIO_REMAP_I2C1_ENABLE();
+    #else
+        {
+            uint32_t * ptr;
+            ptr = (uint32_t*)ACG_AFIO_BASE;
+            *ptr = (*ptr)|0x00000002; // I2C remap
+        }
+    #endif
 
     /* Peripheral clock enable */
     __HAL_RCC_I2C1_CLK_ENABLE();
@@ -461,7 +474,19 @@ void HAL_UART_MspInit(UART_HandleTypeDef* huart)
     GPIO_InitStruct.Pull = GPIO_NOPULL;
     HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
 
+    // ACG
+#if 0
     __HAL_AFIO_REMAP_USART1_ENABLE();
+#else
+    {
+    //#define ACG_PERIPH_BASE           ((uint32_t)0x40000000) /*!< Peripheral base address in the alias region */
+    //#define ACG_APB2PERIPH_BASE       (ACG_PERIPH_BASE + 0x10000)
+    //#define ACG_AFIO_BASE             (ACG_APB2PERIPH_BASE + 0x0000)
+        uint32_t * ptr;
+        ptr = (uint32_t*)ACG_AFIO_BASE;
+        *ptr = (*ptr)|0x00000004;
+    }
+#endif
 
   /* USER CODE BEGIN USART1_MspInit 1 */
 
@@ -515,7 +540,19 @@ void HAL_UART_MspInit(UART_HandleTypeDef* huart)
     GPIO_InitStruct.Pull = GPIO_NOPULL;
     HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
 
-    __HAL_AFIO_REMAP_USART3_PARTIAL();
+    // ACG
+    #if 0
+        __HAL_AFIO_REMAP_USART3_PARTIAL();
+    #else
+        {
+        //#define ACG_PERIPH_BASE           ((uint32_t)0x40000000) /*!< Peripheral base address in the alias region */
+        //#define ACG_APB2PERIPH_BASE       (ACG_PERIPH_BASE + 0x10000)
+        //#define ACG_AFIO_BASE             (ACG_APB2PERIPH_BASE + 0x0000)
+            uint32_t * ptr;
+            ptr = (uint32_t*)ACG_AFIO_BASE;
+            *ptr = (*ptr)|0x00000010; // UART3 partial remap
+        }
+    #endif
 
   /* USER CODE BEGIN USART3_MspInit 1 */
 
