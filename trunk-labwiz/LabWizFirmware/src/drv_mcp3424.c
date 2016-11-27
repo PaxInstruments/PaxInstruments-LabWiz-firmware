@@ -11,7 +11,7 @@
 #include "labwiz/drv_i2c.h"
 #include "stm32f1xx_hal.h"
 
-#include "mcp3424.h"
+#include "drv_mcp3424.h"
 
 #include "string.h"
 

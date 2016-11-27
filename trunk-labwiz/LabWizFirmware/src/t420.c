@@ -1,7 +1,7 @@
 #if 1
 /*****************************************************************************
  **
- ** t1000 related functions.
+ ** t420 related functions.
  ** August 2016
  **
  ****************************************************************************/
@@ -16,7 +16,7 @@
 #include "labwiz/drv_filesystem.h"
 
 #include "thermocouples.h"
-#include "mcp9800.h"
+#include "drv_mcp9800.h"
 
 // Definitions and types
 // ----------------------------------------------------------------------------
@@ -98,19 +98,19 @@ uint32_t m_test_adc=0;
 
 // Local prototypes
 // ----------------------------------------------------------------------------
-void _t1000_btn_press(uint8_t button);
-void _t1000_updateGraphScaling(void);
-int _t1000_convertTemperatureInt(int celcius);
-uint8_t _t1000_temperature_to_pixel(int temp);
-void _t1000_fake_data(void);
-uint8_t _t1000_numlength(int num);
-char * _t1000_printtemp(char * buf, int temp);
-char _t1000_current_unit(void);
-file_result_e _t1000_record_start(void);
-void _t1000_record_stop(void);
-void _t1000_write_header(void);
-void _t1000_write_log(void);
-void _t1000_draw_battery(int row,int col);
+void _t420_btn_press(uint8_t button);
+void _t420_updateGraphScaling(void);
+int _t420_convertTemperatureInt(int celcius);
+uint8_t _t420_temperature_to_pixel(int temp);
+void _t420_fake_data(void);
+uint8_t _t420_numlength(int num);
+char * _t420_printtemp(char * buf, int temp);
+char _t420_current_unit(void);
+file_result_e _t420_record_start(void);
+void _t420_record_stop(void);
+void _t420_write_header(void);
+void _t420_write_log(void);
+void _t420_draw_battery(int row,int col);
 
 // Public functions
 // ----------------------------------------------------------------------------
@@ -152,8 +152,8 @@ void setup()
     create_display_background(3);
 
     lcd_blank();
-    labwiz_set_btn_callback(_t1000_btn_press);
-    lcd_print("Pax Instruments t1000",30,3);
+    labwiz_set_btn_callback(_t420_btn_press);
+    lcd_print("Pax Instruments t420",30,3);
     lcd_latch();
 
     for(uint8_t c = 0; c < SENSOR_COUNT; c++)
@@ -216,11 +216,11 @@ void loop()
             // We have an area from 19----->130 and 19 ^---v 63 (111 x 44)
 
             // Draw status
-            sprintf(m_scratch,"K-`%c-",_t1000_current_unit());
+            sprintf(m_scratch,"K-`%c-",_t420_current_unit());
             lcd_print(m_scratch,10,0);
 
             // Draw battery icon
-            _t1000_draw_battery(10,127);
+            _t420_draw_battery(10,127);
 
             // Show message or logging information
             if(m_message_count>0)
@@ -255,10 +255,10 @@ void loop()
             m_graphdata[2][m_graphdata_index] = thrm_get_temperature(3);
             m_graphdata[3][m_graphdata_index] = thrm_get_temperature(4);
             #else
-            _t1000_fake_data();
+            _t420_fake_data();
             #endif
 
-            _t1000_updateGraphScaling();
+            _t420_updateGraphScaling();
 
             // Draw axis labels and marks
             for(uint8_t interval = 1; interval < 5; interval++)
@@ -268,7 +268,7 @@ void loop()
                 tmp = (m_minTempInt/10) + (m_graphScale*interval);
                 // TODO: Write a space string, then over write with number, drrr
                 // Add spaces for right justified
-                spaces = m_axisDigits-_t1000_numlength(tmp);
+                spaces = m_axisDigits-_t420_numlength(tmp);
                 if(spaces>3) spaces=3;
                 for(c=0;c<spaces;c++)
                     sprintf(&(m_scratch[c])," ");
@@ -298,14 +298,14 @@ void loop()
                   continue;
                 }
 
-                tmp = _t1000_convertTemperatureInt(m_graphdata[channel][m_graphdata_index]);
+                tmp = _t420_convertTemperatureInt(m_graphdata[channel][m_graphdata_index]);
 
-                _t1000_printtemp(m_scratch, tmp);
+                _t420_printtemp(m_scratch, tmp);
                 lcd_print(m_scratch,0,(channel*33)+2);
 
                 // Get the position of the latest point
                 //p = temperature_to_pixel(graph[sensor][graphCurrentPoint]);
-                p = _t1000_temperature_to_pixel(tmp);
+                p = _t420_temperature_to_pixel(tmp);
 
                 // Draw the channel number at the latest point
                 sprintf(m_scratch,"%d",channel+1);
@@ -316,9 +316,9 @@ void loop()
                 #if 1
                 for(uint8_t point = 0; point < m_graphdata_count; point++)
                 {
-                    tmp = _t1000_convertTemperatureInt(m_graphdata[channel][index]);
+                    tmp = _t420_convertTemperatureInt(m_graphdata[channel][index]);
                     //p = temperature_to_pixel(graph[sensor][index]);
-                    p = _t1000_temperature_to_pixel(tmp);
+                    p = _t420_temperature_to_pixel(tmp);
                     // Draw pixel at X, Y. X is # of pixels from the left
                     lcd_set_pixel(p,130-12-point);
                     // Go to next pixel
@@ -333,7 +333,7 @@ void loop()
 
             lcd_latch();
 
-            _t1000_write_log();
+            _t420_write_log();
 
         } // End period_ms
 
@@ -344,7 +344,7 @@ void loop()
             {
                 if(m_logging)
                 {
-                    _t1000_record_stop();
+                    _t420_record_stop();
                 }else if(m_message_count==0){
                     //if(labwiz_read(BTN_SHIFT))
                     //{
@@ -353,7 +353,7 @@ void loop()
                     //}else
                     {
                         file_result_e result;
-                        result = _t1000_record_start();
+                        result = _t420_record_start();
                         switch(result){
                         case FILE_INIT_ERROR:
                             m_message_count = 3*(MS_PER_SECOND/PERIODIC_PERIOD_MS);
@@ -418,7 +418,7 @@ void loop()
 
 // Private functions
 // ----------------------------------------------------------------------------
-void _t1000_btn_press(uint8_t button)
+void _t420_btn_press(uint8_t button)
 {
     // When called as a callback, the function is running in the labwiz
     // task, not the loop() task
@@ -428,7 +428,7 @@ void _t1000_btn_press(uint8_t button)
     return;
 }
 
-void _t1000_updateGraphScaling()
+void _t420_updateGraphScaling()
 {
   int delta;
   int max=TEMP_MIN_VALUE_I;
@@ -455,7 +455,7 @@ void _t1000_updateGraphScaling()
        p = *ptr;
        if(p<THRM_OUT_OF_RANGE)
        {
-           p = _t1000_convertTemperatureInt(p);
+           p = _t420_convertTemperatureInt(p);
            if(p>max) max = p;
            if(p<min) min = p;
        }
@@ -494,7 +494,7 @@ void _t1000_updateGraphScaling()
   return;
 }
 
-int _t1000_convertTemperatureInt(int celcius)
+int _t420_convertTemperatureInt(int celcius)
 {
   switch(m_temperatureUnit){
   case TEMPERATURE_UNITS_F:
@@ -509,7 +509,7 @@ int _t1000_convertTemperatureInt(int celcius)
   return celcius;
 }
 
-uint8_t _t1000_temperature_to_pixel(int temp)
+uint8_t _t420_temperature_to_pixel(int temp)
 {
     int p;
     // This gets the delta between our measurement and the min value (which
@@ -531,7 +531,7 @@ uint8_t _t1000_temperature_to_pixel(int temp)
     return (uint8_t)p;
 }
 
-void _t1000_fake_data()
+void _t420_fake_data()
 {
     // DEBUG: Fake some data
     m_graphdata[0][m_graphdata_index] = THRM_OUT_OF_RANGE;
@@ -584,7 +584,7 @@ void _t1000_fake_data()
 
     return;
 }
-uint8_t _t1000_numlength(int num)
+uint8_t _t420_numlength(int num)
 {
     if(num>999 || num<-99) return 4;
     if(num>99 || num<-9) return 3;
@@ -592,7 +592,7 @@ uint8_t _t1000_numlength(int num)
     return 1;
 }
 
-char * _t1000_printtemp(char * buf, int temp)
+char * _t420_printtemp(char * buf, int temp)
 {
     uint8_t tmp8;
     tmp8 = (uint8_t)abs(temp%10);
@@ -602,7 +602,7 @@ char * _t1000_printtemp(char * buf, int temp)
         sprintf(buf,"%3d.%d",((temp)/10),tmp8);
     return buf;
 }
-char _t1000_current_unit()
+char _t420_current_unit()
 {
     switch(m_temperatureUnit){
     case TEMPERATURE_UNITS_F: return 'F';
@@ -611,13 +611,13 @@ char _t1000_current_unit()
     return 'C';
 }
 
-file_result_e _t1000_record_start()
+file_result_e _t420_record_start()
 {
     int i = 0,limit=100;
 
     // Make sure we are in a known state
     if(m_logging)
-        _t1000_record_stop();
+        _t420_record_stop();
 
 #if ENABLE_SD_CARD_LOGGING
     if(!fs_intialize_card())
@@ -674,7 +674,7 @@ file_result_e _t1000_record_start()
 #endif
 
     m_logging = true;
-    _t1000_write_header();
+    _t420_write_header();
 
     #if ENABLE_SD_CARD_LOGGING
     f_sync(&m_log_file_handle);
@@ -683,7 +683,7 @@ file_result_e _t1000_record_start()
     return FILE_OK;
 }
 
-void _t1000_record_stop()
+void _t420_record_stop()
 {
 
     m_logging = false;
@@ -697,7 +697,7 @@ void _t1000_record_stop()
     return;
 }
 
-void _t1000_write_header()
+void _t420_write_header()
 {
     int x,len;
     uint8_t result;
@@ -710,7 +710,7 @@ void _t1000_write_header()
     len += sprintf(&(m_scratch[len]),"date,time");
     for(x=0;x<SENSOR_COUNT;x++)
     {
-        len += sprintf(&(m_scratch[len]),", temp_%d (%c)",x,_t1000_current_unit());
+        len += sprintf(&(m_scratch[len]),", temp_%d (%c)",x,_t420_current_unit());
     }
     len += sprintf(&(m_scratch[len]),"\n");
 
@@ -729,7 +729,7 @@ void _t1000_write_header()
 
     return;
 }
-void _t1000_write_log()
+void _t420_write_log()
 {
     volatile uint8_t result;
     int x;
@@ -769,7 +769,7 @@ void _t1000_write_log()
 
     return;
 }
-void _t1000_draw_battery(int row,int col)
+void _t420_draw_battery(int row,int col)
 {
     battery_status_e status;
     status = labwiz_get_battery_status();

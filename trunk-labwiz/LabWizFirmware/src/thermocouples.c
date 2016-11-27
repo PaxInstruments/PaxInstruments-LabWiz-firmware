@@ -8,7 +8,7 @@
  ****************************************************************************/
 
 #include "defs.h"
-#include "mcp3424.h"
+#include "drv_mcp3424.h"
 #include "thermocouples.h"
 #include "thermocouples_private.h"
 #include "thermocouples_LUT.h"

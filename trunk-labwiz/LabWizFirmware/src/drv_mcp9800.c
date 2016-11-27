@@ -11,7 +11,7 @@
 #include "labwiz/drv_i2c.h"
 #include "stm32f1xx_hal.h"
 
-#include "mcp9800.h"
+#include "drv_mcp9800.h"
 
 #include "string.h"
 
