@@ -100,12 +100,6 @@ int main(void)
 
   /* USER CODE BEGIN 1 */
   //__disable_irq();
-  // Reset I2C as suggested at:
-  // https://my.st.com/public/STe2ecommunities/mcu/Lists/cortex_mx_stm32/Flat.aspx?RootFolder=https%3a%2f%2fmy%2est%2ecom%2fpublic%2fSTe2ecommunities%2fmcu%2fLists%2fcortex_mx_stm32%2fSTM32L151RB%20I2C%20Busy%20flag%20always%20set&FolderCTID=0x01200200770978C69A1141439FE559EB459D7580009C4E14902C3CDE46A77F0FFD06506F5B&currentviews=3805
-  I2C1->CR1 |= 0x8000;
-  I2C1->CR1 &= (uint16_t) ~((uint16_t) 0x8000);
-  I2C2->CR1 |= 0x8000;
-  I2C2->CR1 &= (uint16_t) ~((uint16_t) 0x8000);
 
   /* USER CODE END 1 */
 
@@ -279,6 +273,12 @@ static void MX_I2C1_Init(void)
   hi2c1.Init.OwnAddress2 = 0;
   hi2c1.Init.GeneralCallMode = I2C_GENERALCALL_DISABLE;
   hi2c1.Init.NoStretchMode = I2C_NOSTRETCH_DISABLE;
+
+  // Reset I2C as suggested at:
+  // https://my.st.com/public/STe2ecommunities/mcu/Lists/cortex_mx_stm32/Flat.aspx?RootFolder=https%3a%2f%2fmy%2est%2ecom%2fpublic%2fSTe2ecommunities%2fmcu%2fLists%2fcortex_mx_stm32%2fSTM32L151RB%20I2C%20Busy%20flag%20always%20set&FolderCTID=0x01200200770978C69A1141439FE559EB459D7580009C4E14902C3CDE46A77F0FFD06506F5B&currentviews=3805
+  I2C1->CR1 |= 0x8000;
+  I2C1->CR1 &= (uint16_t) ~((uint16_t) 0x8000);
+
   if (HAL_I2C_Init(&hi2c1) != HAL_OK)
   {
     Error_Handler();
@@ -338,6 +338,12 @@ static void MX_SDIO_SD_Init(void)
   hsd.Init.BusWide = SDIO_BUS_WIDE_1B;
   hsd.Init.HardwareFlowControl = SDIO_HARDWARE_FLOW_CONTROL_DISABLE;
   hsd.Init.ClockDiv = 10;
+
+  // TODO: This INIT function assumes that a card is present and it checks for the
+  // card type, if it fails (aka, no card) it hangs in error state.  This is BS from ST
+  // this init should be inside the driver for the sd card.  Who the hell combines the init
+  // routine with a check for a device and fails init if the device isn't present.
+
   if (HAL_SD_Init(&hsd, &SDCardInfo) != SD_OK)
   {
     Error_Handler();
@@ -527,6 +533,12 @@ static void MX_GPIO_Init(void)
   __HAL_RCC_GPIOA_CLK_ENABLE();
   __HAL_RCC_GPIOB_CLK_ENABLE();
 
+  // Clear the B8,B9 lines
+  GPIO_InitStruct.Pin = GPIO_PIN_8|GPIO_PIN_9;
+  GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
+
   /*Configure GPIO pin Output Level */
   HAL_GPIO_WritePin(GPIOC, LCD_A0_Pin|MOD4_GPIO2_Pin|MOD3_GPIO2_Pin|MOD2_GPIO2_Pin 
                           |WIFI_EN_Pin, GPIO_PIN_RESET);
@@ -564,7 +576,7 @@ static void MX_GPIO_Init(void)
   HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
 
   // Configure pins for I2C
-  GPIO_InitStruct.Pin = GPIO_PIN_8|GPIO_PIN_6;
+  GPIO_InitStruct.Pin = GPIO_PIN_8|GPIO_PIN_9;
   GPIO_InitStruct.Mode = GPIO_MODE_AF_OD;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
@@ -648,11 +660,14 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 void Error_Handler(void)
 {
   /* USER CODE BEGIN Error_Handler */
+#if 0
   /* User can add his own implementation to report the HAL error return state */
   while(1) 
   {
       asm("nop");
   }
+#endif
+
   /* USER CODE END Error_Handler */ 
 }
 

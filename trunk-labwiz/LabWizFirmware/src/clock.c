@@ -1,4 +1,4 @@
-#if 1
+#if 0
 /*****************************************************************************
  **
  ** Clock application
@@ -103,6 +103,14 @@ void loop()
             labwiz_get_time(&tm);
 
             lcd_set_screen(&m_clockscreen);
+
+            {
+                sprintf(m_scratch,"Testing");
+                drv_uart1_tx(m_scratch,7);
+                drv_uart2_tx(m_scratch,7);
+                drv_uart3_tx(m_scratch,7);
+            }
+
 
             // Draw hour
             d = (tm.Hours%12)*30;

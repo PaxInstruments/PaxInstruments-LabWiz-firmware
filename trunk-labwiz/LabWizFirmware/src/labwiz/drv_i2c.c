@@ -20,6 +20,8 @@ extern I2C_HandleTypeDef hi2c2;
 // Local module variables
 // ---------------------------------------------------------------------------
 
+int m_i2c1_busy_count=0;
+
 // Private prototypes
 // ---------------------------------------------------------------------------
 
@@ -110,6 +112,11 @@ bool drv_i2c1_ready()
     return (hi2c1.State == HAL_I2C_STATE_READY);
 }
 
+int drv_i2c1_busy_count()
+{
+	return m_i2c1_busy_count;
+}
+
 HAL_StatusTypeDef drv_i2c1_write(uint16_t DevAddress, uint8_t *pData, uint16_t Size)
 {
     HAL_StatusTypeDef ret;
@@ -118,16 +125,17 @@ HAL_StatusTypeDef drv_i2c1_write(uint16_t DevAddress, uint8_t *pData, uint16_t S
     //if(__HAL_I2C_GET_FLAG(&hi2c1, I2C_FLAG_BUSY) != RESET)
     //    return HAL_BUSY;
     // Not busy, do things
-    ret = HAL_I2C_Master_Transmit(&hi2c1, DevAddress, pData, Size, HAL_MAX_DELAY);
+    //ret = HAL_I2C_Master_Transmit(&hi2c1, DevAddress, pData, Size, HAL_MAX_DELAY);
+    ret = HAL_I2C_Master_Transmit(&hi2c1, DevAddress, pData, Size, 10);
     switch(ret){
     case HAL_OK:
-        nop();
+    	m_i2c1_busy_count=0;
         break;
     case HAL_ERROR:
         nop();
         break;
     case HAL_BUSY:
-        nop();
+    	m_i2c1_busy_count++;
         break;
     case HAL_TIMEOUT:
     default:
@@ -145,16 +153,17 @@ HAL_StatusTypeDef drv_i2c1_read(uint16_t DevAddress, uint8_t *pData, uint16_t Si
     //if(__HAL_I2C_GET_FLAG(&hi2c1, I2C_FLAG_BUSY) != RESET)
     //    return HAL_BUSY;
     // Not busy, do things
-    ret = HAL_I2C_Master_Receive(&hi2c1, DevAddress, pData, Size, HAL_MAX_DELAY);
+
+    ret = HAL_I2C_Master_Receive(&hi2c1, DevAddress, pData, Size, 10);
     switch(ret){
     case HAL_OK:
-        nop();
+    	m_i2c1_busy_count=0;
         break;
     case HAL_ERROR:
         nop();
         break;
     case HAL_BUSY:
-        nop();
+    	m_i2c1_busy_count++;
         break;
     case HAL_TIMEOUT:
     default:
@@ -167,6 +176,7 @@ HAL_StatusTypeDef drv_i2c1_read(uint16_t DevAddress, uint8_t *pData, uint16_t Si
 
 // I2C 2 functions
 ////////////////////////////
+#if 0
 bool drv_i2c2_busy()
 {
     return (hi2c1.State == HAL_I2C_STATE_BUSY);
@@ -185,7 +195,8 @@ HAL_StatusTypeDef drv_i2c2_write(uint16_t DevAddress, uint8_t *pData, uint16_t S
     //if(__HAL_I2C_GET_FLAG(&hi2c1, I2C_FLAG_BUSY) != RESET)
     //    return HAL_BUSY;
     // Not busy, do things
-    ret = HAL_I2C_Master_Transmit(&hi2c2, DevAddress, pData, Size, HAL_MAX_DELAY);
+    //ret = HAL_I2C_Master_Transmit(&hi2c2, DevAddress, pData, Size, HAL_MAX_DELAY);
+    ret = HAL_I2C_Master_Transmit(&hi2c2, DevAddress, pData, Size, 10);
     switch(ret){
     case HAL_OK:
         nop();
@@ -212,7 +223,8 @@ HAL_StatusTypeDef drv_i2c2_read(uint16_t DevAddress, uint8_t *pData, uint16_t Si
     //if(__HAL_I2C_GET_FLAG(&hi2c1, I2C_FLAG_BUSY) != RESET)
     //    return HAL_BUSY;
     // Not busy, do things
-    ret = HAL_I2C_Master_Receive(&hi2c2, DevAddress, pData, Size, HAL_MAX_DELAY);
+    //ret = HAL_I2C_Master_Receive(&hi2c2, DevAddress, pData, Size, HAL_MAX_DELAY);
+    ret = HAL_I2C_Master_Receive(&hi2c2, DevAddress, pData, Size, 10);
     switch(ret){
     case HAL_OK:
         nop();
@@ -231,6 +243,7 @@ HAL_StatusTypeDef drv_i2c2_read(uint16_t DevAddress, uint8_t *pData, uint16_t Si
 
     return ret;
 }
+#endif
 
 
 // eof

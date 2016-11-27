@@ -126,10 +126,6 @@ void HAL_ADC_MspDeInit(ADC_HandleTypeDef* hadc)
 
 }
 
-#define ACG_PERIPH_BASE           ((uint32_t)0x40000000) /*!< Peripheral base address in the alias region */
-#define ACG_APB2PERIPH_BASE       (ACG_PERIPH_BASE + 0x10000)
-#define ACG_AFIO_BASE             (ACG_APB2PERIPH_BASE + 0x0000)
-
 void HAL_I2C_MspInit(I2C_HandleTypeDef* hi2c)
 {
 
@@ -140,29 +136,34 @@ void HAL_I2C_MspInit(I2C_HandleTypeDef* hi2c)
 
   /* USER CODE END I2C1_MspInit 0 */
   
-    /**I2C1 GPIO Configuration    
-    PB8     ------> I2C1_SCL
-    PB9     ------> I2C1_SDA 
-    */
-    GPIO_InitStruct.Pin = GPIO_PIN_8|GPIO_PIN_9;
-    GPIO_InitStruct.Mode = GPIO_MODE_AF_OD;
-    GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_HIGH;
-    HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
-
     // ACG
     #if 0
     __HAL_AFIO_REMAP_I2C1_ENABLE();
     #else
-        {
-            uint32_t * ptr;
-            ptr = (uint32_t*)ACG_AFIO_BASE;
-            *ptr = (*ptr)|0x00000002; // I2C remap
-        }
+    MODIFY_REG(AFIO->MAPR,  AFIO_MAPR_SWJ_CFG, AFIO_MAPR_SWJ_CFG_JTAGDISABLE|AFIO_MAPR_I2C1_REMAP);
     #endif
 
     /* Peripheral clock enable */
     __HAL_RCC_I2C1_CLK_ENABLE();
-  /* USER CODE BEGIN I2C1_MspInit 1 */
+
+    /**I2C1 GPIO Configuration
+       PB8     ------> I2C1_SCL
+       PB9     ------> I2C1_SDA
+       */
+       GPIO_InitStruct.Pin = GPIO_PIN_8|GPIO_PIN_9;
+       GPIO_InitStruct.Mode = GPIO_MODE_AF_OD;
+       GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+       HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
+
+    /* USER CODE BEGIN I2C1_MspInit 1 */
+
+    // Forum post:https://my.st.com/public/STe2ecommunities/mcu/Lists/STM32Java/Flat.aspx?RootFolder=%2fpublic%2fSTe2ecommunities%2fmcu%2fLists%2fSTM32Java%2fSTM32F1%20I2C1%20Alt%20Functions%20Drive%20Low&FolderCTID=0x01200200770978C69A1141439FE559EB459D758000F9A0E3A95BA69146A17C2E80209ADC21&TopicsView=https%3A%2F%2Fmy%2Est%2Ecom%2Fpublic%2FSTe2ecommunities%2Fmcu%2FLists%2FSTM32Java%2FAllItems%2Easpx&currentviews=0
+    // work around which solves I2C initial busy problem.
+    // I2C gets busy during setup, just after I2C clock enable.
+    // force/release reset at this point helps to reset the busy
+    // flag of the I2C and lets the I2C interface work as expected.
+    __HAL_RCC_I2C1_FORCE_RESET();
+    __HAL_RCC_I2C1_RELEASE_RESET();
 
   /* USER CODE END I2C1_MspInit 1 */
   }
@@ -475,18 +476,11 @@ void HAL_UART_MspInit(UART_HandleTypeDef* huart)
     HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
 
     // ACG
-#if 0
+    #if 0
     __HAL_AFIO_REMAP_USART1_ENABLE();
-#else
-    {
-    //#define ACG_PERIPH_BASE           ((uint32_t)0x40000000) /*!< Peripheral base address in the alias region */
-    //#define ACG_APB2PERIPH_BASE       (ACG_PERIPH_BASE + 0x10000)
-    //#define ACG_AFIO_BASE             (ACG_APB2PERIPH_BASE + 0x0000)
-        uint32_t * ptr;
-        ptr = (uint32_t*)ACG_AFIO_BASE;
-        *ptr = (*ptr)|0x00000004;
-    }
-#endif
+    #else
+    MODIFY_REG(AFIO->MAPR,  AFIO_MAPR_SWJ_CFG, AFIO_MAPR_SWJ_CFG_JTAGDISABLE|AFIO_MAPR_USART1_REMAP);
+    #endif
 
   /* USER CODE BEGIN USART1_MspInit 1 */
 
@@ -544,14 +538,7 @@ void HAL_UART_MspInit(UART_HandleTypeDef* huart)
     #if 0
         __HAL_AFIO_REMAP_USART3_PARTIAL();
     #else
-        {
-        //#define ACG_PERIPH_BASE           ((uint32_t)0x40000000) /*!< Peripheral base address in the alias region */
-        //#define ACG_APB2PERIPH_BASE       (ACG_PERIPH_BASE + 0x10000)
-        //#define ACG_AFIO_BASE             (ACG_APB2PERIPH_BASE + 0x0000)
-            uint32_t * ptr;
-            ptr = (uint32_t*)ACG_AFIO_BASE;
-            *ptr = (*ptr)|0x00000010; // UART3 partial remap
-        }
+    MODIFY_REG(AFIO->MAPR,  AFIO_MAPR_SWJ_CFG|AFIO_MAPR_USART3_REMAP, AFIO_MAPR_USART3_REMAP_PARTIALREMAP|AFIO_MAPR_SWJ_CFG_JTAGDISABLE);
     #endif
 
   /* USER CODE BEGIN USART3_MspInit 1 */

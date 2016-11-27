@@ -264,14 +264,16 @@ int32_t thrmMicroVoltsToC(int32_t microvoltsMeasured)
     int32_t microvolts;
     int32_t result;
 
-    // The microvolts are from 0, so add in the offset
+    // The microvolts are from 0
     microvolts = microvoltsMeasured;
 
 	//look up microvolts in The Table and interpolate
 	result = interpolateTemperature(microvolts, searchMicrovolts(microvolts));
 
+	// result is now in kelvin
     result -= (TEMP_OFFSET*10);
-	asm("nop");
+	//asm("nop");
+
 	return result;
 }
 

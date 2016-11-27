@@ -34,12 +34,18 @@
 #define SW_E_EXTI           2
 #define SW_PWR_EXTI         0
 #else
-#define SW_A_EXTI           9
-#define SW_B_EXTI           8
-#define SW_C_EXTI           9
-#define SW_D_EXTI           2
-#define SW_E_EXTI           10
-#define SW_PWR_EXTI         0
+#define SW_A_EXTI           9	// PC9
+#define SW_B_EXTI           8	// PB8
+#define SW_C_EXTI           9 	// PB9
+#define SW_D_EXTI           2	// PB2
+#define SW_E_EXTI           10	// PB10
+#define SW_PWR_EXTI         0   // PA0
+
+// Error on board, SW D & E are switched
+#undef SW_D_EXTI
+#define SW_D_EXTI			10
+#undef SW_E_EXTI
+#define SW_E_EXTI			2
 
 #endif
 
@@ -436,7 +442,9 @@ __weak void loop()
 void EXTI0_IRQHandler(void){_exti_ISR();}
 void EXTI2_IRQHandler(void){_exti_ISR();}
 void EXTI9_5_IRQHandler(void){_exti_ISR();}
-void EXTI15_10_IRQHandler(void){_exti_ISR();}
+void EXTI15_10_IRQHandler(void){
+	_exti_ISR();
+}
 void _exti_ISR(void)
 {
     volatile uint32_t pr;
