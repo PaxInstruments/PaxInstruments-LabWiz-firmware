@@ -14,9 +14,9 @@
 #include "labwiz/drv_usb.h"
 #include "labwiz/drv_lcd.h"
 #include "labwiz/drv_filesystem.h"
+#include "labwiz/drv_mcp9800.h"
 
 #include "thermocouples.h"
-#include "drv_mcp9800.h"
 
 // Definitions and types
 // ----------------------------------------------------------------------------

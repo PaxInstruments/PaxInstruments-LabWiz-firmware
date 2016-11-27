@@ -8,9 +8,8 @@
  ****************************************************************************/
 
 #include "defs.h"
-#include "drv_mcp3424.h"
+#include "labwiz/drv_mcp3424.h"
 #include "thermocouples.h"
-#include "thermocouples_private.h"
 #include "thermocouples_LUT.h"
 
 
