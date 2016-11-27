@@ -241,7 +241,8 @@ void _mcp3424_next()
     if(m_config_reg.channel>(NUM_CHANNELS-1)) m_config_reg.channel = 0;
     // Start conv.
     m_config_reg.ready = 1;
-    _mcp3424_write_config(&m_config_reg);
+    if(_mcp3424_write_config(&m_config_reg)==false)
+        asm("nop");
     return;
 }
 

@@ -46,10 +46,7 @@
 /* Private variables ---------------------------------------------------------*/
 ADC_HandleTypeDef hadc1;
 
-CAN_HandleTypeDef hcan;
-
 I2C_HandleTypeDef hi2c1;
-I2C_HandleTypeDef hi2c2;
 
 RTC_HandleTypeDef hrtc;
 
@@ -62,8 +59,10 @@ SPI_HandleTypeDef hspi3;
 
 UART_HandleTypeDef huart1;
 UART_HandleTypeDef huart2;
+UART_HandleTypeDef huart3;
 
 osThreadId defaultTaskHandle;
+PCD_HandleTypeDef hpcd_USB_FS;
 
 /* USER CODE BEGIN PV */
 /* Private variables ---------------------------------------------------------*/
@@ -74,17 +73,17 @@ osThreadId defaultTaskHandle;
 void SystemClock_Config(void);
 void Error_Handler(void);
 static void MX_GPIO_Init(void);
-static void MX_CAN_Init(void);
+static void MX_ADC1_Init(void);
 static void MX_I2C1_Init(void);
-static void MX_I2C2_Init(void);
-static void MX_RTC_Init(void);
 static void MX_SDIO_SD_Init(void);
 static void MX_SPI1_Init(void);
 static void MX_SPI2_Init(void);
 static void MX_SPI3_Init(void);
 static void MX_USART1_UART_Init(void);
 static void MX_USART2_UART_Init(void);
-static void MX_ADC1_Init(void);
+static void MX_USART3_UART_Init(void);
+static void MX_USB_PCD_Init(void);
+static void MX_RTC_Init(void);
 void StartDefaultTask(void const * argument);
 
 /* USER CODE BEGIN PFP */
@@ -101,12 +100,6 @@ int main(void)
 
   /* USER CODE BEGIN 1 */
   //__disable_irq();
-  // Reset I2C as suggested at:
-  // https://my.st.com/public/STe2ecommunities/mcu/Lists/cortex_mx_stm32/Flat.aspx?RootFolder=https%3a%2f%2fmy%2est%2ecom%2fpublic%2fSTe2ecommunities%2fmcu%2fLists%2fcortex_mx_stm32%2fSTM32L151RB%20I2C%20Busy%20flag%20always%20set&FolderCTID=0x01200200770978C69A1141439FE559EB459D7580009C4E14902C3CDE46A77F0FFD06506F5B&currentviews=3805
-  I2C1->CR1 |= 0x8000;
-  I2C1->CR1 &= (uint16_t) ~((uint16_t) 0x8000);
-  I2C2->CR1 |= 0x8000;
-  I2C2->CR1 &= (uint16_t) ~((uint16_t) 0x8000);
 
   /* USER CODE END 1 */
 
@@ -119,22 +112,25 @@ int main(void)
   SystemClock_Config();
 
   /* Initialize all configured peripherals */
+
   MX_GPIO_Init();
-  //MX_CAN_Init();
+
+  MX_ADC1_Init();
   MX_I2C1_Init();
-  MX_I2C2_Init();
-  MX_RTC_Init();
   MX_SDIO_SD_Init();
   MX_SPI1_Init();
   MX_SPI2_Init();
   MX_SPI3_Init();
   MX_USART1_UART_Init();
   MX_USART2_UART_Init();
-  MX_ADC1_Init();
+  MX_USART3_UART_Init();
+
+  MX_USB_PCD_Init();
+
+  MX_RTC_Init();
 
   /* USER CODE BEGIN 2 */
   labwiz_init();
-  //__enable_irq();
   /* USER CODE END 2 */
 
   /* USER CODE BEGIN RTOS_MUTEX */
@@ -254,33 +250,10 @@ static void MX_ADC1_Init(void)
 
     /**Configure Regular Channel 
     */
-  sConfig.Channel = ADC_CHANNEL_8;
+  sConfig.Channel = ADC_CHANNEL_15;
   sConfig.Rank = 1;
   sConfig.SamplingTime = ADC_SAMPLETIME_1CYCLE_5;
   if (HAL_ADC_ConfigChannel(&hadc1, &sConfig) != HAL_OK)
-  {
-    Error_Handler();
-  }
-
-}
-
-/* CAN init function */
-static void MX_CAN_Init(void)
-{
-
-  hcan.Instance = CAN1;
-  hcan.Init.Prescaler = 16;
-  hcan.Init.Mode = CAN_MODE_NORMAL;
-  hcan.Init.SJW = CAN_SJW_1TQ;
-  hcan.Init.BS1 = CAN_BS1_1TQ;
-  hcan.Init.BS2 = CAN_BS2_1TQ;
-  hcan.Init.TTCM = DISABLE;
-  hcan.Init.ABOM = DISABLE;
-  hcan.Init.AWUM = DISABLE;
-  hcan.Init.NART = DISABLE;
-  hcan.Init.RFLM = DISABLE;
-  hcan.Init.TXFP = DISABLE;
-  if (HAL_CAN_Init(&hcan) != HAL_OK)
   {
     Error_Handler();
   }
@@ -300,27 +273,13 @@ static void MX_I2C1_Init(void)
   hi2c1.Init.OwnAddress2 = 0;
   hi2c1.Init.GeneralCallMode = I2C_GENERALCALL_DISABLE;
   hi2c1.Init.NoStretchMode = I2C_NOSTRETCH_DISABLE;
+
+  // Reset I2C as suggested at:
+  // https://my.st.com/public/STe2ecommunities/mcu/Lists/cortex_mx_stm32/Flat.aspx?RootFolder=https%3a%2f%2fmy%2est%2ecom%2fpublic%2fSTe2ecommunities%2fmcu%2fLists%2fcortex_mx_stm32%2fSTM32L151RB%20I2C%20Busy%20flag%20always%20set&FolderCTID=0x01200200770978C69A1141439FE559EB459D7580009C4E14902C3CDE46A77F0FFD06506F5B&currentviews=3805
+  I2C1->CR1 |= 0x8000;
+  I2C1->CR1 &= (uint16_t) ~((uint16_t) 0x8000);
+
   if (HAL_I2C_Init(&hi2c1) != HAL_OK)
-  {
-    Error_Handler();
-  }
-
-}
-
-/* I2C2 init function */
-static void MX_I2C2_Init(void)
-{
-
-  hi2c2.Instance = I2C2;
-  hi2c2.Init.ClockSpeed = 100000;
-  hi2c2.Init.DutyCycle = I2C_DUTYCYCLE_2;
-  hi2c2.Init.OwnAddress1 = 0;
-  hi2c2.Init.AddressingMode = I2C_ADDRESSINGMODE_7BIT;
-  hi2c2.Init.DualAddressMode = I2C_DUALADDRESS_DISABLE;
-  hi2c2.Init.OwnAddress2 = 0;
-  hi2c2.Init.GeneralCallMode = I2C_GENERALCALL_DISABLE;
-  hi2c2.Init.NoStretchMode = I2C_NOSTRETCH_DISABLE;
-  if (HAL_I2C_Init(&hi2c2) != HAL_OK)
   {
     Error_Handler();
   }
@@ -379,6 +338,16 @@ static void MX_SDIO_SD_Init(void)
   hsd.Init.BusWide = SDIO_BUS_WIDE_1B;
   hsd.Init.HardwareFlowControl = SDIO_HARDWARE_FLOW_CONTROL_DISABLE;
   hsd.Init.ClockDiv = 10;
+
+  // TODO: This INIT function assumes that a card is present and it checks for the
+  // card type, if it fails (aka, no card) it hangs in error state.  This is BS from ST
+  // this init should be inside the driver for the sd card.  Who the hell combines the init
+  // routine with a check for a device and fails init if the device isn't present.
+
+  if (HAL_SD_Init(&hsd, &SDCardInfo) != SD_OK)
+  {
+    Error_Handler();
+  }
 
 }
 
@@ -468,7 +437,7 @@ static void MX_USART1_UART_Init(void)
 {
 
   huart1.Instance = USART1;
-  huart1.Init.BaudRate = 115200;
+  huart1.Init.BaudRate = 9600;
   huart1.Init.WordLength = UART_WORDLENGTH_8B;
   huart1.Init.StopBits = UART_STOPBITS_1;
   huart1.Init.Parity = UART_PARITY_NONE;
@@ -487,7 +456,7 @@ static void MX_USART2_UART_Init(void)
 {
 
   huart2.Instance = USART2;
-  huart2.Init.BaudRate = 115200;
+  huart2.Init.BaudRate = 9600;
   huart2.Init.WordLength = UART_WORDLENGTH_8B;
   huart2.Init.StopBits = UART_STOPBITS_1;
   huart2.Init.Parity = UART_PARITY_NONE;
@@ -495,6 +464,43 @@ static void MX_USART2_UART_Init(void)
   huart2.Init.HwFlowCtl = UART_HWCONTROL_NONE;
   huart2.Init.OverSampling = UART_OVERSAMPLING_16;
   if (HAL_UART_Init(&huart2) != HAL_OK)
+  {
+    Error_Handler();
+  }
+
+}
+
+/* USART3 init function */
+static void MX_USART3_UART_Init(void)
+{
+
+  huart3.Instance = USART3;
+  huart3.Init.BaudRate = 9600;
+  huart3.Init.WordLength = UART_WORDLENGTH_8B;
+  huart3.Init.StopBits = UART_STOPBITS_1;
+  huart3.Init.Parity = UART_PARITY_NONE;
+  huart3.Init.Mode = UART_MODE_TX_RX;
+  huart3.Init.HwFlowCtl = UART_HWCONTROL_NONE;
+  huart3.Init.OverSampling = UART_OVERSAMPLING_16;
+  if (HAL_UART_Init(&huart3) != HAL_OK)
+  {
+    Error_Handler();
+  }
+
+}
+
+/* USB init function */
+static void MX_USB_PCD_Init(void)
+{
+
+  hpcd_USB_FS.Instance = USB;
+  hpcd_USB_FS.Init.dev_endpoints = 8;
+  hpcd_USB_FS.Init.speed = PCD_SPEED_FULL;
+  hpcd_USB_FS.Init.ep0_mps = DEP0CTL_MPS_8;
+  hpcd_USB_FS.Init.low_power_enable = DISABLE;
+  hpcd_USB_FS.Init.lpm_enable = DISABLE;
+  hpcd_USB_FS.Init.battery_charging_enable = DISABLE;
+  if (HAL_PCD_Init(&hpcd_USB_FS) != HAL_OK)
   {
     Error_Handler();
   }
@@ -513,56 +519,72 @@ static void MX_GPIO_Init(void)
 
   GPIO_InitTypeDef GPIO_InitStruct;
 
+  GPIO_InitStruct.Pin = GPIO_PIN_All;
+  GPIO_InitStruct.Mode = GPIO_MODE_AF_INPUT;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
+  HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
+  HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
+
   /* GPIO Ports Clock Enable */
   __HAL_RCC_GPIOC_CLK_ENABLE();
   __HAL_RCC_GPIOD_CLK_ENABLE();
   __HAL_RCC_GPIOA_CLK_ENABLE();
   __HAL_RCC_GPIOB_CLK_ENABLE();
 
-  /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOC, LCD_RST_Pin|LCD_A0_Pin|PC1_Pin|WIFI_EN_Pin, GPIO_PIN_RESET);
+  // Clear the B8,B9 lines
+  GPIO_InitStruct.Pin = GPIO_PIN_8|GPIO_PIN_9;
+  GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(LCD_BL_GPIO_Port, LCD_BL_Pin, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(GPIOC, LCD_A0_Pin|MOD4_GPIO2_Pin|MOD3_GPIO2_Pin|MOD2_GPIO2_Pin 
+                          |WIFI_EN_Pin, GPIO_PIN_RESET);
 
-/*Configure I2C pins as open drain: PortB 6 & 7 */
-GPIO_InitStruct.Pin = GPIO_PIN_7|GPIO_PIN_6;
-GPIO_InitStruct.Mode = GPIO_MODE_AF_OD;
-GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
-HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
+  /*Configure GPIO pin Output Level */
+  HAL_GPIO_WritePin(GPIOA, MOD1_GPIO2_Pin|LCD_BL_Pin, GPIO_PIN_RESET);
 
-  /*Configure GPIO pins : LCD_RST_Pin LCD_A0_Pin PC1_Pin WIFI_EN_Pin */
-  GPIO_InitStruct.Pin = LCD_RST_Pin|LCD_A0_Pin|PC1_Pin|WIFI_EN_Pin;
+  /*Configure GPIO pin Output Level */
+  HAL_GPIO_WritePin(GPIOB, MOD2_GPIO1_Pin|MOD4_GPIO1_Pin|LCD_RST_Pin, GPIO_PIN_RESET);
+
+  /*Configure GPIO pins : LCD_A0_Pin MOD4_GPIO2_Pin MOD3_GPIO2_Pin MOD2_GPIO2_Pin 
+                           WIFI_EN_Pin */
+  GPIO_InitStruct.Pin = LCD_A0_Pin|MOD4_GPIO2_Pin|MOD3_GPIO2_Pin|MOD2_GPIO2_Pin 
+                          |WIFI_EN_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
 
-  /*Configure GPIO pins : MOD3_GPIO1_Pin MOD2_GPIO1_Pin MOD1_GPIO1_Pin MOD4_GPIO0_Pin */
-  GPIO_InitStruct.Pin = MOD3_GPIO1_Pin|MOD2_GPIO1_Pin|MOD1_GPIO1_Pin|MOD4_GPIO0_Pin;
+  /*Configure GPIO pins : MOD1_GPIO2_Pin LCD_BL_Pin */
+  GPIO_InitStruct.Pin = MOD1_GPIO2_Pin|LCD_BL_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
-  HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+  HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 
-  /*Configure GPIO pin : MOD2_GPIO0_Pin */
-  GPIO_InitStruct.Pin = MOD2_GPIO0_Pin;
-  GPIO_InitStruct.Mode = GPIO_MODE_ANALOG;
-  HAL_GPIO_Init(MOD2_GPIO0_GPIO_Port, &GPIO_InitStruct);
+  /*Configure GPIO pins : MOD2_GPIO1_Pin MOD4_GPIO1_Pin LCD_RST_Pin */
+  GPIO_InitStruct.Pin = MOD2_GPIO1_Pin|MOD4_GPIO1_Pin|LCD_RST_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+  HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
 
-  /*Configure GPIO pin : MOD4_GPIO1_Pin */
-  GPIO_InitStruct.Pin = MOD4_GPIO1_Pin;
-  GPIO_InitStruct.Mode = GPIO_MODE_ANALOG;
-  HAL_GPIO_Init(MOD4_GPIO1_GPIO_Port, &GPIO_InitStruct);
-
-  /*Configure GPIO pin : SW_E_BOOT1_Pin */
-  GPIO_InitStruct.Pin = SW_E_BOOT1_Pin;
-  GPIO_InitStruct.Mode = GPIO_MODE_IT_FALLING;
+  /*Configure GPIO pins : SW_D_Pin SW_E_Pin */
+  GPIO_InitStruct.Pin = SW_D_Pin|SW_E_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
-  HAL_GPIO_Init(SW_E_BOOT1_GPIO_Port, &GPIO_InitStruct);
+  HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
 
-  /*Configure GPIO pins : SW_C_Pin SW_B_Pin SW_A_Pin */
-  GPIO_InitStruct.Pin = SW_C_Pin|SW_B_Pin|SW_A_Pin;
-  GPIO_InitStruct.Mode = GPIO_MODE_IT_FALLING;
+  // Configure pins for I2C
+  GPIO_InitStruct.Pin = GPIO_PIN_8|GPIO_PIN_9;
+  GPIO_InitStruct.Mode = GPIO_MODE_AF_OD;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
-  HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
+  HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
+
+  /*Configure GPIO pin : VCAP1_Pin */
+  GPIO_InitStruct.Pin = VCAP1_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_ANALOG;
+  HAL_GPIO_Init(VCAP1_GPIO_Port, &GPIO_InitStruct);
 
   /*Configure GPIO pin : BATT_STAT_Pin */
   GPIO_InitStruct.Pin = BATT_STAT_Pin;
@@ -570,17 +592,23 @@ HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(BATT_STAT_GPIO_Port, &GPIO_InitStruct);
 
-  /*Configure GPIO pin : SW_D_BOOT0_Pin */
-  GPIO_InitStruct.Pin = SW_D_BOOT0_Pin;
+  /*Configure GPIO pin : SW_A_Pin */
+  GPIO_InitStruct.Pin = SW_A_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
-  HAL_GPIO_Init(SW_D_BOOT0_GPIO_Port, &GPIO_InitStruct);
+  HAL_GPIO_Init(SW_A_GPIO_Port, &GPIO_InitStruct);
 
-  /*Configure GPIO pin : LCD_BL_Pin */
-  GPIO_InitStruct.Pin = LCD_BL_Pin;
-  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
-  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
-  HAL_GPIO_Init(LCD_BL_GPIO_Port, &GPIO_InitStruct);
+  /*Configure GPIO pin : SW_B_Pin */
+  GPIO_InitStruct.Pin = SW_B_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  HAL_GPIO_Init(SW_B_GPIO_Port, &GPIO_InitStruct);
+
+  /*Configure GPIO pin : SW_C_Pin */
+  GPIO_InitStruct.Pin = SW_C_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  HAL_GPIO_Init(SW_C_GPIO_Port, &GPIO_InitStruct);
 
 }
 
@@ -632,11 +660,14 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 void Error_Handler(void)
 {
   /* USER CODE BEGIN Error_Handler */
+#if 0
   /* User can add his own implementation to report the HAL error return state */
   while(1) 
   {
       asm("nop");
   }
+#endif
+
   /* USER CODE END Error_Handler */ 
 }
 

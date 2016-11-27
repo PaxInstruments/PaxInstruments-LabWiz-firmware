@@ -3,13 +3,12 @@
 #include "stdint.h"
 #include "thermocouples_LUT.h"
 
-
 #define UVOLT_OFFSET    6458    // This is the offset for kelvin, to c, subtract this from uV to get 0C
-#define TEMP_OFFSET     2700     // This is the offset for kelvin, to c, subtract this from temp to get C
+#define TEMP_OFFSET     270    // This is the offset for kelvin, to c, subtract this from temp to get C
 
 #define POINTS_COUNT    148
 
-// These are temperatures from abs_zero and the corresponding microvolts
+// These are temperatures from abs_zero (In deg C) and the corresponding microvolts
 // Source: http://srdata.nist.gov/its90/download/type_k.tab
 static thrm_lookup_t typeK_LUT_Kelvin[] = {
 {0,0},
@@ -174,22 +173,49 @@ static inline int32_t interpolate(int32_t val, int32_t rangeStart, int32_t range
 
     interp = (uvOver*1000) / uvDelta;
 
-    result = ((rangeEnd - rangeStart) * interp)/100;
+    result = ((rangeEnd - rangeStart) * interp)/1000;
     result += rangeStart;
 
     return result;
 }
 
+// Given a temperature in 1/10ths, find the microvolts associated with it
 static inline int32_t interpolateVoltage(int32_t temp, int i)
 {
-    return interpolate(temp, typeK_LUT_Kelvin[i-1].microvolts,typeK_LUT_Kelvin[i].microvolts,
-            typeK_LUT_Kelvin[i-1].temperature, typeK_LUT_Kelvin[i].temperature);
+    int32_t result;
+    int32_t tOver,tDelta;
+    int32_t interp;
+    int32_t rangeStart,rangeEnd;
+
+    rangeStart = typeK_LUT_Kelvin[i-1].temperature;
+    rangeEnd = typeK_LUT_Kelvin[i].temperature;
+
+    tOver = (temp- rangeStart);
+    tDelta = (rangeEnd - rangeStart);
+
+    interp = (tOver*100) / tDelta;
+
+    result = ((typeK_LUT_Kelvin[i].microvolts - typeK_LUT_Kelvin[i-1].microvolts) * interp)/100;
+    result += typeK_LUT_Kelvin[i-1].microvolts;
+
+    return result;
 }
 
 static inline int32_t interpolateTemperature(int32_t microvolts, int i)
 {
-    return interpolate(microvolts, typeK_LUT_Kelvin[i-1].temperature,typeK_LUT_Kelvin[i].temperature,
-            typeK_LUT_Kelvin[i-1].microvolts, typeK_LUT_Kelvin[i].microvolts);
+    int32_t result;
+    int32_t uvOver,uvDelta;
+    int32_t interp;
+
+    uvOver = (microvolts- typeK_LUT_Kelvin[i-1].microvolts);
+    uvDelta = (typeK_LUT_Kelvin[i].microvolts - typeK_LUT_Kelvin[i-1].microvolts);
+
+    interp = (uvOver*1000) / uvDelta;
+
+    result = ((typeK_LUT_Kelvin[i].temperature - typeK_LUT_Kelvin[i-1].temperature) * interp)/100;
+    result += (typeK_LUT_Kelvin[i-1].temperature*10);
+
+    return result;
 }
 
 /**
@@ -238,16 +264,16 @@ int32_t thrmMicroVoltsToC(int32_t microvoltsMeasured)
     int32_t microvolts;
     int32_t result;
 
-    // The microvolts are from 0, so add in the offset
-    microvolts = microvoltsMeasured + UVOLT_OFFSET;
+    // The microvolts are from 0
+    microvolts = microvoltsMeasured;
 
 	//look up microvolts in The Table and interpolate
 	result = interpolateTemperature(microvolts, searchMicrovolts(microvolts));
 
-	// This is in kelvin, get it in 1/10ths of C and subtract the temperature
-	result = (result*10) -TEMP_OFFSET;
+	// result is now in kelvin
+    result -= (TEMP_OFFSET*10);
+	//asm("nop");
 
-	asm("nop");
 	return result;
 }
 
@@ -264,16 +290,12 @@ int32_t thrmCToMicroVolts(int32_t measured_temp)
 {
     int32_t result;
 
-    // The temp is in Celcius, so add in the offset
-    measured_temp += TEMP_OFFSET;
+    // The temp is in Celcius, so add in the offset to get to kelvin
+    measured_temp += (TEMP_OFFSET*10);
 
     // This is the microvolts from abs zero
-    result = interpolateVoltage(measured_temp, searchTemp(measured_temp));
+    // The measured_temp is in 1/10ths of volts, so div by 10 in the search
+    result = interpolateVoltage(measured_temp/10, searchTemp(measured_temp/10));
 
-    // This is microvolts from abs zero, subtract the offset
-    result -= UVOLT_OFFSET;
-
-    asm("nop");
     return result;
 }
-

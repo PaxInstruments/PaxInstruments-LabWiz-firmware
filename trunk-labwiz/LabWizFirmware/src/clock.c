@@ -104,6 +104,14 @@ void loop()
 
             lcd_set_screen(&m_clockscreen);
 
+            {
+                sprintf(m_scratch,"Testing");
+                drv_uart1_tx(m_scratch,7);
+                drv_uart2_tx(m_scratch,7);
+                drv_uart3_tx(m_scratch,7);
+            }
+
+
             // Draw hour
             d = (tm.Hours%12)*30;
             _clock_pos(CLOCK_CENTER_ROW,CLOCK_CENTER_COL,10 ,d, &newrow, &newcol);
@@ -122,6 +130,8 @@ void loop()
             lcd_print(m_scratch,0,0);
             sprintf(&(m_scratch),"%02d:%02d:%02d",tm.Hours,tm.Minutes,tm.Seconds);
             lcd_print(m_scratch,0,82);
+
+            d = usb_write((uint8_t*)m_scratch,strlen(m_scratch));
 
             lcd_latch();
         }

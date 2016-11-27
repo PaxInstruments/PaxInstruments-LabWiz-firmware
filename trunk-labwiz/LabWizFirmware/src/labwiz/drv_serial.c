@@ -29,6 +29,7 @@
 // ---------------------------------------------------------------------------
 extern UART_HandleTypeDef huart1;
 extern UART_HandleTypeDef huart2;
+extern UART_HandleTypeDef huart3;
 
 #ifndef UART1_RX_BUFFER_SIZE
 #define UART1_RX_BUFFER_SIZE        32
@@ -38,11 +39,18 @@ extern UART_HandleTypeDef huart2;
 #define UART2_RX_BUFFER_SIZE        32
 #endif
 
+#ifndef UART3_RX_BUFFER_SIZE
+#define UART3_RX_BUFFER_SIZE        32
+#endif
+
 #if (UART1_RX_BUFFER_SIZE > UCHAR_MAX)
-#error "Uart buffer too big for uint8"
+#error "Uart1 buffer too big for uint8"
 #endif
 #if (UART2_RX_BUFFER_SIZE > UCHAR_MAX)
-#error "Uart buffer too big for uint8"
+#error "Uart2 buffer too big for uint8"
+#endif
+#if (UART3_RX_BUFFER_SIZE > UCHAR_MAX)
+#error "Uart3 buffer too big for uint8"
 #endif
 
 // Local module variables
@@ -50,13 +58,22 @@ extern UART_HandleTypeDef huart2;
 // A mutex to synchronize the serial port from different tasks
 xSemaphoreHandle m_serial1_mutex_tx;
 xSemaphoreHandle m_serial1_mutex_rx;
-
 xSemaphoreHandle m_serial_semaphore_rx;
+
+xSemaphoreHandle m_serial2_mutex_tx;
+xSemaphoreHandle m_serial2_mutex_rx;
+xSemaphoreHandle m_serial2_semaphore_rx;
+
+xSemaphoreHandle m_serial3_mutex_tx;
+xSemaphoreHandle m_serial3_mutex_rx;
+xSemaphoreHandle m_serial3_semaphore_rx;
 
 uint8_t m_uart1_receive_byte;
 bool m_uart1_recevie_flag = false;
 uint8_t m_uart2_receive_byte;
 bool m_uart2_recevie_flag = false;
+uint8_t m_uart3_receive_byte;
+bool m_uart3_recevie_flag = false;
 
 uint8_t m_uart1_buffer[UART1_RX_BUFFER_SIZE];
 uint8_t m_uart1_buffer_index = 0;
@@ -68,10 +85,16 @@ uint8_t m_uart2_buffer_index = 0;
 bool m_uart2_buffer_overflow = false;
 bool m_uart2_buffer_overrun = false;
 
+uint8_t m_uart3_buffer[UART3_RX_BUFFER_SIZE];
+uint8_t m_uart3_buffer_index = 0;
+bool m_uart3_buffer_overflow = false;
+bool m_uart3_buffer_overrun = false;
+
 // Private prototypes
 // ---------------------------------------------------------------------------
 void USART1_IRQHandler(void);
 void USART2_IRQHandler(void);
+void USART3_IRQHandler(void);
 
 // Public functions
 // ---------------------------------------------------------------------------
@@ -83,6 +106,15 @@ void drv_uart_init()
     m_serial1_mutex_tx = xSemaphoreCreateMutex();
     m_serial1_mutex_rx = xSemaphoreCreateMutex();
     vSemaphoreCreateBinary(m_serial_semaphore_rx);
+
+    m_serial2_mutex_tx = xSemaphoreCreateMutex();
+    m_serial2_mutex_rx = xSemaphoreCreateMutex();
+    vSemaphoreCreateBinary(m_serial2_semaphore_rx);
+
+    m_serial3_mutex_tx = xSemaphoreCreateMutex();
+    m_serial3_mutex_rx = xSemaphoreCreateMutex();
+    vSemaphoreCreateBinary(m_serial3_semaphore_rx);
+
     // If semaphores are NULL, not enough space
 
     // Enable the UART1 global interrupt
@@ -112,6 +144,45 @@ void drv_uart1_tx(uint8_t * pData, uint16_t size)
     xSemaphoreGive( m_serial1_mutex_tx );
     return;
 }
+void drv_uart2_tx(uint8_t * pData, uint16_t size)
+{
+    xSemaphoreTake( m_serial2_mutex_tx, portMAX_DELAY );
+    // The following will only execute once the mutex has been obtained
+    {
+        HAL_StatusTypeDef result;
+
+        // Send things to the serial port, use blocking mode, no timeout
+
+        // If this blocks for a long time the scheduler will push us to
+        // BLOCKED and resume when we have a slice.  Since we are guarded
+        // by a mutex other tasks will not jump into the middle of the
+        // active tasks transmit
+        result = HAL_UART_Transmit(&huart2, pData, size, HAL_MAX_DELAY);
+    }
+    // The mutex MUST be given back
+    xSemaphoreGive( m_serial2_mutex_tx );
+    return;
+}
+void drv_uart3_tx(uint8_t * pData, uint16_t size)
+{
+    xSemaphoreTake( m_serial3_mutex_tx, portMAX_DELAY );
+    // The following will only execute once the mutex has been obtained
+    {
+        HAL_StatusTypeDef result;
+
+        // Send things to the serial port, use blocking mode, no timeout
+
+        // If this blocks for a long time the scheduler will push us to
+        // BLOCKED and resume when we have a slice.  Since we are guarded
+        // by a mutex other tasks will not jump into the middle of the
+        // active tasks transmit
+        result = HAL_UART_Transmit(&huart3, pData, size, HAL_MAX_DELAY);
+    }
+    // The mutex MUST be given back
+    xSemaphoreGive( m_serial3_mutex_tx );
+    return;
+}
+
 
 uint8_t drv_uart1_rx(uint8_t* pData, uint8_t max_size)
 {
@@ -419,5 +490,106 @@ void USART2_IRQHandler()
     return;
 }
 
+void USART3_IRQHandler()
+{
+    HAL_NVIC_ClearPendingIRQ(USART3_IRQn);
+
+    // Copied from the original HAL ISR
+
+    // Check each interrupt flag ORd with the interrupt enable flag
+
+#if 0
+    /* UART parity error interrupt occurred ------------------------------------*/
+    if( (huart3.Instance->SR & UART_FLAG_PE) &&
+            (huart3.Instance->CR1 & USART_CR1_PEIE) )
+    {
+        huart3.ErrorCode |= HAL_UART_ERROR_PE;
+    }
+
+    /* UART frame error interrupt occurred -------------------------------------*/
+    if( (huart3.Instance->SR & UART_FLAG_FE) &&
+            (huart3.Instance->CR3 & USART_CR3_EIE) )
+    {
+        huart3.ErrorCode |= HAL_UART_ERROR_FE;
+    }
+
+    /* UART noise error interrupt occurred -------------------------------------*/
+    if( (huart3.Instance->SR & UART_FLAG_NE) &&
+            (huart3.Instance->CR3 & USART_CR3_EIE) )
+    {
+        huart3.ErrorCode |= HAL_UART_ERROR_NE;
+    }
+
+    /* UART Over-Run interrupt occurred ----------------------------------------*/
+    if( (huart3.Instance->SR & UART_FLAG_ORE) &&
+            (huart3.Instance->CR3 & USART_CR3_EIE) )
+    {
+        huart3.ErrorCode |= HAL_UART_ERROR_ORE;
+    }
+#endif
+    /* UART in mode Receiver ---------------------------------------------------*/
+#if 0
+    if( (huart3.Instance->SR & UART_FLAG_RXNE) &&
+            (huart3.Instance->CR1 & USART_CR1_RXNEIE) )
+    {
+        // We recevied a byte
+
+        // Save the byte
+        m_uart2_receive_byte = (uint8_t)(huart3.Instance->DR);
+        #if 0
+        // If the process flag was already set, we have an overrun
+        if(m_uart2_recevie_flag)
+            m_uart2_buffer_overrun = true;
+
+        // Release the RX semaphore
+        m_uart2_recevie_flag = true;
+        xSemaphoreGiveFromISR(m_serial_semaphore_rx,NULL);
+        #endif
+
+    }
+#endif
+
+#if 0
+    /* UART in mode Transmitter ------------------------------------------------*/
+    if( (huart3.Instance->SR & UART_FLAG_TXE) &&
+            (huart3.Instance->CR1 & USART_CR1_TXEIE) )
+    {
+        // We transmitted a byte
+        //UART_Transmit_IT(huart3);
+    }
+
+    /* UART in mode Transmitter end --------------------------------------------*/
+    if( (huart3.Instance->SR & UART_FLAG_TC) &&
+            (huart3.Instance->CR1 & USART_CR1_TCIE) )
+    {
+        // End transmit
+        //UART_EndTransmit_IT(huart3);
+    }
+    if(huart3.ErrorCode != HAL_UART_ERROR_NONE)
+    {
+        uint32_t tmpreg;
+        // Reads will clear the error flags?
+        //__HAL_UART_CLEAR_PEFLAG(huart);
+        tmpreg = huart3.Instance->SR;
+        tmpreg = huart3.Instance->DR;
+
+        // Set the UART state ready to be able to start again the process?
+        //huart3.State = HAL_UART_STATE_READY;
+
+        // We had an error
+        //HAL_UART_ErrorCallback(huart3);
+    }
+#else
+
+    // Clear the error flags
+    {
+        //uint32_t tmpreg;
+        // Reads will clear the error flags?
+        //__HAL_UART_CLEAR_PEFLAG(huart);
+        //tmpreg = huart3.Instance->SR;
+    }
+#endif
+    return;
+}
 
 // eof

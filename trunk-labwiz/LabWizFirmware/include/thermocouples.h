@@ -10,11 +10,14 @@
 #ifndef __THERMOCOUPLES_H__
 #define __THERMOCOUPLES_H__
 
-#define THRM_OUT_OF_RANGE       15000
+#define THRM_OUT_OF_RANGE       60000
+#define THRM_OUT_OF_RANGE_NEG   (-1*THRM_OUT_OF_RANGE)
 
 void thrm_init(void);
 
 void thrm_poll(void);
+
+int thrm_get_uvolts(int channel);
 
 int thrm_get_temperature(int channel);
 

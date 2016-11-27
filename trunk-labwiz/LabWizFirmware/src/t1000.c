@@ -62,7 +62,7 @@ int m_button_mask = 0;
 int m_state = STATE_INIT;
 
 // Array to hold graph data, in temperature values
-int16_t m_graphdata[SENSOR_COUNT][MAXIMUM_GRAPH_POINTS]={};
+int m_graphdata[SENSOR_COUNT][MAXIMUM_GRAPH_POINTS]={};
 uint8_t m_graphdata_index=0;
 uint8_t m_graphdata_head=0;
 uint8_t m_graphdata_count=0;
@@ -70,8 +70,8 @@ uint8_t m_graphdata_count=0;
 uint32_t m_graphScale;
 
 uint8_t m_axisDigits;     // Number of digits to display in the axis labels (ex: '80' -> 2, '1000' -> 4, '-999' -> 4)
-int16_t m_minTempInt;
-int16_t m_maxTempInt;
+int m_minTempInt;
+int m_maxTempInt;
 
 uint8_t m_temperatureUnit = TEMPERATURE_UNITS_C;
 
@@ -100,11 +100,11 @@ uint32_t m_test_adc=0;
 // ----------------------------------------------------------------------------
 void _t1000_btn_press(uint8_t button);
 void _t1000_updateGraphScaling(void);
-int16_t _t1000_convertTemperatureInt(int16_t celcius);
-uint8_t _t1000_temperature_to_pixel(int16_t temp);
+int _t1000_convertTemperatureInt(int celcius);
+uint8_t _t1000_temperature_to_pixel(int temp);
 void _t1000_fake_data(void);
-uint8_t _t1000_numlength(int16_t num);
-char * _t1000_printtemp(char * buf, int16_t temp);
+uint8_t _t1000_numlength(int num);
+char * _t1000_printtemp(char * buf, int temp);
 char _t1000_current_unit(void);
 file_result_e _t1000_record_start(void);
 void _t1000_record_stop(void);
@@ -160,7 +160,7 @@ void setup()
     {
      for(uint8_t y=0; y < MAXIMUM_GRAPH_POINTS; y++)
      {
-         m_graphdata[c][y] = THRM_OUT_OF_RANGE/10;
+         m_graphdata[c][y] = THRM_OUT_OF_RANGE;
      }
     }
 
@@ -264,15 +264,15 @@ void loop()
             for(uint8_t interval = 1; interval < 5; interval++)
             {
                 uint8_t spaces=0,c;
-                int16_t tmp16;
-                tmp16 = (m_minTempInt/10) + (m_graphScale*interval);
+                int tmp;
+                tmp = (m_minTempInt/10) + (m_graphScale*interval);
                 // TODO: Write a space string, then over write with number, drrr
                 // Add spaces for right justified
-                spaces = m_axisDigits-_t1000_numlength(tmp16);
+                spaces = m_axisDigits-_t1000_numlength(tmp);
                 if(spaces>3) spaces=3;
                 for(c=0;c<spaces;c++)
                     sprintf(&(m_scratch[c])," ");
-                sprintf(&(m_scratch[spaces]), "%d", tmp16);
+                sprintf(&(m_scratch[spaces]), "%d", tmp);
                 lcd_print(m_scratch, 63 - interval*10, 0);
             }
 
@@ -286,25 +286,26 @@ void loop()
             // Draw the temperature graph for each sensor
             for(uint8_t channel = 0; channel< SENSOR_COUNT; channel++)
             {
-                int16_t tmp16;
+                int tmp;
                 uint8_t p,index;
 
                 // if the sensor is out of range, don't show it. If we are showing one
                 // channel, ignore the others
-                if(m_graphdata[channel][m_graphdata_index] >= THRM_OUT_OF_RANGE ||
+                tmp = m_graphdata[channel][m_graphdata_index];
+                if(tmp >= THRM_OUT_OF_RANGE ||
                     (channel != m_current_channel && m_current_channel < 4) )
                 {
                   continue;
                 }
 
-                tmp16 = _t1000_convertTemperatureInt(m_graphdata[channel][m_graphdata_index]);
+                tmp = _t1000_convertTemperatureInt(m_graphdata[channel][m_graphdata_index]);
 
-                _t1000_printtemp(m_scratch, tmp16);
+                _t1000_printtemp(m_scratch, tmp);
                 lcd_print(m_scratch,0,(channel*33)+2);
 
                 // Get the position of the latest point
                 //p = temperature_to_pixel(graph[sensor][graphCurrentPoint]);
-                p = _t1000_temperature_to_pixel(tmp16);
+                p = _t1000_temperature_to_pixel(tmp);
 
                 // Draw the channel number at the latest point
                 sprintf(m_scratch,"%d",channel+1);
@@ -315,9 +316,9 @@ void loop()
                 #if 1
                 for(uint8_t point = 0; point < m_graphdata_count; point++)
                 {
-                    tmp16 = _t1000_convertTemperatureInt(m_graphdata[channel][index]);
+                    tmp = _t1000_convertTemperatureInt(m_graphdata[channel][index]);
                     //p = temperature_to_pixel(graph[sensor][index]);
-                    p = _t1000_temperature_to_pixel(tmp16);
+                    p = _t1000_temperature_to_pixel(tmp);
                     // Draw pixel at X, Y. X is # of pixels from the left
                     lcd_set_pixel(p,130-12-point);
                     // Go to next pixel
@@ -422,27 +423,37 @@ void _t1000_btn_press(uint8_t button)
     // When called as a callback, the function is running in the labwiz
     // task, not the loop() task
     m_button_mask |= SW_MASK(button);
+
     // TODO: mutex?
     return;
 }
 
 void _t1000_updateGraphScaling()
 {
-  uint16_t delta;
-  int16_t max=TEMP_MIN_VALUE_I;
-  int16_t min=TEMP_MAX_VALUE_I;
-  int16_t * ptr;
-  int16_t p;
+  int delta;
+  int max=TEMP_MIN_VALUE_I;
+  int min=TEMP_MAX_VALUE_I;
+  int * ptr;
+  int p;
   uint8_t old_axisdigits = m_axisDigits;
 
   // Itterate over all the data and get the max & min
   for(uint8_t x = 0; x < SENSOR_COUNT; x++)
   {
-     ptr = (int16_t*)&m_graphdata[x][0];
+     ptr = (int*)&m_graphdata[x][0];
+
+     // Don't process data from channels that are out of range
+     p = m_graphdata[x][m_graphdata_index];
+     if(p>=THRM_OUT_OF_RANGE)
+	 {
+    	 nop();
+    	 continue;
+	 }
+
      for(uint8_t y=0; y < MAXIMUM_GRAPH_POINTS; y++)
      {
        p = *ptr;
-       if(p!=(THRM_OUT_OF_RANGE/10))
+       if(p<THRM_OUT_OF_RANGE)
        {
            p = _t1000_convertTemperatureInt(p);
            if(p>max) max = p;
@@ -457,8 +468,8 @@ void _t1000_updateGraphScaling()
 
   m_minTempInt = min;
   m_maxTempInt = max;
-  delta = (uint16_t)(max - min);
-  if(delta<4) m_maxTempInt=(int16_t)(m_minTempInt+4);
+  delta = (int)(max - min);
+  if(delta<4) m_maxTempInt=(m_minTempInt+4);
 
   m_graphScale = (uint32_t)((delta + 39) / 40);  // TODO: better rounding strategy
   if(m_graphScale==0) m_graphScale = 1;
@@ -470,8 +481,8 @@ void _t1000_updateGraphScaling()
   // Calculate the number of axes digits to display
   m_axisDigits = 2;
   // These are in 1/10th, is min<-99.0 || max>999.9
-  if(min<-999 || (max+(int16_t)(m_graphScale*4)) >9999) m_axisDigits = 4;
-  else if(min<-100 || (max+(int16_t)(m_graphScale*4))>999) m_axisDigits = 3;
+  if(min<-999 || (max+(int)(m_graphScale*4)) >9999) m_axisDigits = 4;
+  else if(min<-100 || (max+(int)(m_graphScale*4))>999) m_axisDigits = 3;
 
 
   if(m_axisDigits!=old_axisdigits)
@@ -483,49 +494,50 @@ void _t1000_updateGraphScaling()
   return;
 }
 
-int16_t _t1000_convertTemperatureInt(int16_t celcius)
+int _t1000_convertTemperatureInt(int celcius)
 {
   switch(m_temperatureUnit){
   case TEMPERATURE_UNITS_F:
-      celcius = (int16_t)(celcius*18);
-      celcius = (int16_t)(celcius/10);
-      celcius = (int16_t)(celcius + 320);
+      celcius = (celcius*18);
+      celcius = (celcius/10);
+      celcius = (celcius + 320);
       return celcius;
   case TEMPERATURE_UNITS_K:
-    return (int16_t)(celcius + 2732);
+    return (celcius + 2732);
   default: break;
   }
   return celcius;
 }
 
-uint8_t _t1000_temperature_to_pixel(int16_t temp)
+uint8_t _t1000_temperature_to_pixel(int temp)
 {
-    uint16_t p;
+    int p;
     // This gets the delta between our measurement and the min value (which
     // is the bottom of the chart
     // Example: if minTempInt=300, p_int=325. p = 25, it is 2.5deg higher
-    p = (uint16_t)(temp -  m_minTempInt);
+    p = (temp -  m_minTempInt);
     // Now we need to keep all points within the drawing window.  Each temperature step
     // takes up 10 pixels of height (But we are already in 1/10th of degrees!). But if
     // we scaled, scale our value down, this means we need to divide the delta by
     // the scale value
-    p = (uint16_t)(p / m_graphScale);
+    p = (p / m_graphScale);
 
     // This gets us a scaled pixel offset.  So at scale 1. 25/1 = 25
     // This means we put the pixel 25 pixels above the low. Since the
     // low is always 60 pixels from the top, we take this
     // value and remove our pos.
-    p = (uint16_t)(60-p);
+    p = (60-p);
+
     return (uint8_t)p;
 }
 
 void _t1000_fake_data()
 {
     // DEBUG: Fake some data
-    m_graphdata[0][m_graphdata_index] = (THRM_OUT_OF_RANGE/10);
-    m_graphdata[1][m_graphdata_index] = (THRM_OUT_OF_RANGE/10);
-    m_graphdata[2][m_graphdata_index] = (THRM_OUT_OF_RANGE/10);
-    m_graphdata[3][m_graphdata_index] = (THRM_OUT_OF_RANGE/10);
+    m_graphdata[0][m_graphdata_index] = THRM_OUT_OF_RANGE;
+    m_graphdata[1][m_graphdata_index] = THRM_OUT_OF_RANGE;
+    m_graphdata[2][m_graphdata_index] = THRM_OUT_OF_RANGE;
+    m_graphdata[3][m_graphdata_index] = THRM_OUT_OF_RANGE;
     #if 0
     // EXTREME!
     m_graphdata[0][m_graphdata_index] = 30000; // 3270.9 C
@@ -546,14 +558,14 @@ void _t1000_fake_data()
     static double val=0.0;
     double tmpdbl;
     tmpdbl = ((SCALE*sin(val))+OFFSET)*10;
-    m_graphdata[0][m_graphdata_index] = (int16_t)tmpdbl;
-    m_graphdata[2][m_graphdata_index] = (int16_t)tmpdbl+5.0;
+    m_graphdata[0][m_graphdata_index] = (int)tmpdbl;
+    m_graphdata[2][m_graphdata_index] = (int)tmpdbl+5.0;
     val += ADD;
     #endif
 
     #if 0
-    static int16_t val=300;
-    static int16_t step=5;
+    static int val=300;
+    static int step=5;
     m_graphdata[0][m_graphdata_index] = val;
     m_graphdata[1][m_graphdata_index] = val+50;
     m_graphdata[2][m_graphdata_index] = val+100;
@@ -572,7 +584,7 @@ void _t1000_fake_data()
 
     return;
 }
-uint8_t _t1000_numlength(int16_t num)
+uint8_t _t1000_numlength(int num)
 {
     if(num>999 || num<-99) return 4;
     if(num>99 || num<-9) return 3;
@@ -580,7 +592,7 @@ uint8_t _t1000_numlength(int16_t num)
     return 1;
 }
 
-char * _t1000_printtemp(char * buf, int16_t temp)
+char * _t1000_printtemp(char * buf, int temp)
 {
     uint8_t tmp8;
     tmp8 = (uint8_t)abs(temp%10);
@@ -601,7 +613,7 @@ char _t1000_current_unit()
 
 file_result_e _t1000_record_start()
 {
-    uint16_t i = 0,limit=100;
+    int i = 0,limit=100;
 
     // Make sure we are in a known state
     if(m_logging)

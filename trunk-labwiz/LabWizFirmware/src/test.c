@@ -99,25 +99,36 @@ void loop()
 
             sprintf(m_scratch,"Testing");
             lcd_print(m_scratch,0,0);
+
+#if 1
             for(x=0;x<4;x++)
             {
-                int temp;
+                int temp,uv;
                 temp = thrm_get_temperature(x+1);
+                uv = thrm_get_uvolts(x+1);
 #if 0
-                if(temp<THRM_OUT_OF_RANGE)
-                    sprintf(m_scratch,"Ch %d:%d.%d C",x,temp/100,temp%100);
+                if(temp>THRM_OUT_OF_RANGE_NEG)
+                    sprintf(m_scratch,"Ch %d:%d.%d C",x,temp/10,temp%10);
                 else
                     sprintf(m_scratch,"Ch %d: N/A",x);
 #else
-                sprintf(m_scratch,"Ch %d:%d uV",x,temp);
+                sprintf(m_scratch,"Ch %d:%d uV, %d",x,uv,temp);
 #endif
                 lcd_print(m_scratch,(x*10)+10,0);
             }
             {
                 int temp=mcp9800_get_temperature();
+                //int temp=0;
                 thrm_set_ambient(temp);
                 sprintf(m_scratch,"Ambient:%d.%d",temp/10,temp%10);
-                lcd_print(m_scratch,50,0);
+                lcd_print(m_scratch,49,0);
+            }
+#endif
+
+            {
+            	int cnt = drv_i2c1_busy_count();
+            	sprintf(m_scratch,"Busy: %d",cnt);
+				lcd_print(m_scratch,57,0);
             }
 
             lcd_latch();

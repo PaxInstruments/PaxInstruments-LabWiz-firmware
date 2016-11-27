@@ -16,6 +16,8 @@ void drv_uart_init(void);
 // Send a buffer of data to the serial port.  This will
 // block until all data has been sent
 void drv_uart1_tx(uint8_t * pData, uint16_t size);
+void drv_uart2_tx(uint8_t * pData, uint16_t size);
+void drv_uart3_tx(uint8_t * pData, uint16_t size);
 
 // Helper macro to send a fixed string
 #define drv_uart1_tx_str(S)   drv_serial1_tx((uint8_t*)(S), sizeof(S)-1);
