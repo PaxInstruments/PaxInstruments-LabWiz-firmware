@@ -1,0 +1,43 @@
+LabWiz Pinout Comparison
+
+st103 - STM32F103RGT6, LQFT64
+gd103 - GD32F103RGT6, LQFP64
+st405 - STM32F405RGT6, LQFT64
+
+name, default, remap
+
+Pin ST103   ST405   GD103
+--- -----             -----   -----
+1   VBAT,-,-      "
+2   PC13,TAMPER-RTC,-
+3   PC14
+4   PC15
+5   OSC_IN
+6   OSC_OUT
+7   NRST
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+23
+24
+25
+26
+27
+28
+29
+30
+
+
+
